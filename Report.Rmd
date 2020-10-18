@@ -7,6 +7,9 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(png)
+library(ggplot2)
+library(knitr)
 ```
 
 ## Experiment question: 
@@ -23,6 +26,15 @@ Findings from this experiment  have important business implications to apple and
 
 ### Description of the experiments
 Each group member will buy 12 apples.  Then, randomly place $\frac{1}{2}$ of apples in (i) upside-up position and the other half in (ii) upside-down position.  The treatment will be placing apples and oranges in different positions.  Fruites will be placed at a room temperature.  Pictures of each apple and orange will be taken after the sun goes down and will report the temperature and other weather conditions.
+
+```{r}
+ima1_path <-"ApplePicture/fig/slide2.PNG"
+img1 <- readPNG(ima1_path, native = TRUE, info = TRUE)
+attr(img1,"info")
+#not sure why this function is not working
+#include_graphics(img1_path)
+```
+
 
 ![Treatment and control](ApplePicture/fig/slide2.jpg)
 
