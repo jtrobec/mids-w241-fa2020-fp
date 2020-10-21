@@ -12,93 +12,20 @@ library(ggplot2)
 library(knitr)
 ```
 
-# We would like you to think about such questions as:
+With our experiment, we aim to determine if the orientation in which an apple is kept on a counter impacts its longevity.
 
-### At a high level, how are you planning to execute the experiment? How will you divide up the data collection task among yourselves?
+We believe we will have time to run this experiment multiple times. Each run of the experiment will work like this:
 
+Every group member will buy 12 apples. We will record each apple's weight in grams, and give it an ID. Next, we will randomly place $\frac{1}{2}$ of the apples in (i) upside-up position and the other half in (ii) upside-down position.  Control will be having the apples upside-down, and treatment will be upside-up. 
 
-### How detailed is your experimental design and procedure so far?
+![Treatment and control](ApplePicture/fig/slide2.jpg){height=100}
 
-### What parts of the protocol have you not fleshed out yet?
+Fruits will be placed at a room temperature. Every day, at a consistent time after sundown (to control for daylight variations), we will take pictures of all the apples. We will also record temperature and humidity in the room at the time of the photographs, using the same model/brand of thermometer.
 
+In effect, each group member is running a block of the experiment simultaneously. We will also attempt a clustered design, where we assign treatment and control based on apple type.
 
-### What aspects are you undecided about? Would you like advice on these?
+![Four quadrant setup](ApplePicture/fig/slide3.jpg){height=100}
 
+We will use some computational tools to measure the 'spoiledness' of the apples. Pictures for a given apple will be processed by an algorithm that measures the visible changes between two images of the same fruit. Essentially, we will be tracking how quickly brown spots begin to form over the course of a 10 day period. The amount of change becomes our outcome variable. We already have a prototype of this algorithm that has been tested on some synthetically marked pictures of an apple.
 
-### What software (if any) needs to be written to execute the experiment? How far along are you on this?
-
-### On what questions would you like advice from the instructor?
-
-### Are you hoping for a grant to help cover expenses of the experiment? If so, make sure to send the instructor a one-page email detailing your grant amount request (up to $500 per group)
-
-
-
-
-## Experiment question: 
-Would placing apples in certain positions make them last longer at a room temperature?
-
-## Background: 
-
-Banana hangers  are used to hang bananas to make them last longer by preventing bananas from bruising and decreasing the chance of exposing the banana flesh to oxygen.  Another potential reason that banana hangers can keep bananas fresh for a longer period of time could be contributed to how bananas are kept in the natural position (i.e., how they used to be growing from the tree).
-
-Devices like banana hangers can help bananas to stay fresh for a longer period of time at a room temperature, but there are no commercially available such devices for apples or oranges. I propose to test if placing apples and oranges in a certain position can last them longer at a room temperature. 
-
-Importance of the experiment
-Findings from this experiment  have important business implications to apple and orange sellers whose objective is to keep their fruits fresh for a longer period without using any artificial preservatives. As it can be seen in the figure above, companies are already spending resources to keep their product to last longer.  If we prove that just by placing apples and oranges in certain positions can keep them fresh longer, it has potential to significantly decrease their loss due to spoiled fruits. 
-
-### Description of the experiments
-Each group member will buy 12 apples.  Then, randomly place $\frac{1}{2}$ of apples in (i) upside-up position and the other half in (ii) upside-down position.  The treatment will be placing apples and oranges in different positions.  Fruites will be placed at a room temperature.  Pictures of each apple and orange will be taken after the sun goes down and will report the temperature and other weather conditions.
-
-```{r}
-ima1_path <-"ApplePicture/fig/slide2.PNG"
-img1 <- readPNG(ima1_path, native = TRUE, info = TRUE)
-attr(img1,"info")
-#not sure why this function is not working
-#include_graphics(img1_path)
-```
-
-
-![Treatment and control](ApplePicture/fig/slide2.jpg)
-
-![Treatment and control](ApplePicture/fig/slide3.jpg)
-
-![Treatment and control](ApplePicture/fig/slide4.jpg)
-
-
-To make the condition of fruits to be independent of each other, they will be kept apart from each other as much as possible and where kids can touch. 
-
-I intend to employ blocking to compare apples to apples and oranges to oranges. 
-
-### Outcome
-
-The number of days that apples and oranges stay fresh.  We will be taking pictures of apples and oranges on a daily basis and use CNN to detect any changes in the appearance and also to quantify the changes.  The pictures will be posted on a website each day. 
-
-Secondary outcome measures you plan to collect?
-Identify if the fruits were organic or not.
-Temperature of the room
-
-### Greatest risks to the experiment
-
-Family members accidentally touching them or kids eating them.
-
-
-## Picture of Apples from COSTCO
-
-
-| Lable| Type          | Name         | Price  |   
-|----- |---            |---           |---     |
-| a    | Conventional  | Honey Crisp  | $9.99  | 
-| b    | Organic       | Envy Apples  | $9.99  |
-| c    | Organic       | Ambrosa      | $7.99  |
-| d    | Organic       | Fuju         | $9.99  |
-| e    | Organic       | Gala         | $8.99  |
-| f    | Organic       | Honey Crisp  | $12.99 | 
-| g    | Organic       | Snack Fuju   | $4.99  | 
-
-![Picture of Apples](ApplePicture/fig/slide1.jpg)
-
-## Action item
-
-- Make figures more presentable [LINK](http://zevross.com/blog/2017/06/19/tips-and-tricks-for-working-with-images-and-figures-in-r-markdown-documents/)
-
-- decide on how the data should be stored
+We do not have any particular questions for the instructors at this time -- we received some good early feedback from Micah after teams were first created. We are interested in requesting grant money to cover the purchase of apples, thermometers and scales if possible.
