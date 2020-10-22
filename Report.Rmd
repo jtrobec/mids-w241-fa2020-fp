@@ -97,8 +97,42 @@ Family members accidentally touching them or kids eating them.
 
 ![Picture of Apples](ApplePicture/fig/slide1.jpg)
 
+
+## Experiment
+
+`10/20/20` Nobu and Bill meet at COSTCO and purchased Oranic Honeycrip which 
+contains 14 apples.
+
+```{r}
+b1 <- sample(c(0,1), 14, replace=T)
+print(b1)
+
+```
+
+| Treatment|   
+|----- |---            |---           |---     |
+| (1,172)    | Conventional  | Honey Crisp  | $9.99  | 
+|     | Organic       | Envy Apples  | $9.99  |
+| c    | Organic       | Ambrosa      | $7.99  |
+| d    | Organic       | Fuju         | $9.99  |
+| e    | Organic       | Gala         | $8.99  |
+| f    | Organic       | Honey Crisp  | $12.99 | 
+| g    | Organic       | Snack Fuju   | $4.99  |
+
+
+
+
+
+
+
+
+
+
 ## Action item
 
 - Make figures more presentable [LINK](http://zevross.com/blog/2017/06/19/tips-and-tricks-for-working-with-images-and-figures-in-r-markdown-documents/)
 
 - decide on how the data should be stored
+
+
+
