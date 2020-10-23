@@ -16,7 +16,7 @@ With our experiment, we aim to determine if the orientation in which an apple is
 
 We believe we will have time to run this experiment multiple times. Each run of the experiment will work like this:
 
-Every group member will buy 12 apples. We will record each apple's weight in grams, and give it an ID. Next, we will randomly place $\frac{1}{2}$ of the apples in (i) upside-up position and the other half in (ii) upside-down position.  Control will be having the apples upside-down, and treatment will be upside-up.
+Every group member will buy 12 or more apples. We will record each apple's weight in grams, and give it an ID. Next, we will randomly place $\frac{1}{2}$ of the apples in (i) upside-up position and the other half in (ii) upside-down position.  Control will be having the apples upside-down, and treatment will be upside-up.
 
 ![Treatment and control](ApplePicture/fig/slide2.jpg){height=100}
 
