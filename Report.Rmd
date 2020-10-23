@@ -1,6 +1,6 @@
 ---
-title: "Comparing Apples to Applies"
-author: "Bill Chung, Justin Trobec, Nobu Yamaguchi"
+title: \vspace{-1.5cm} Comparing Apples to Applies
+author: \vspace{-1.5cm} Bill Chung, Justin Trobec, Nobu Yamaguchi
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
@@ -16,9 +16,11 @@ With our experiment, we aim to determine if the orientation in which an apple is
 
 We believe we will have time to run this experiment multiple times. Each run of the experiment will work like this:
 
-Every group member will buy 12 apples. We will record each apple's weight in grams, and give it an ID. Next, we will randomly place $\frac{1}{2}$ of the apples in (i) upside-up position and the other half in (ii) upside-down position.  Control will be having the apples upside-down, and treatment will be upside-up.
+Every group member will buy 12 or more apples. We will record each apple's weight in grams, and give it an ID. Next, we will randomly place $\frac{1}{2}$ of the apples in (i) upside-up position and the other half in (ii) upside-down position.  Control will be having the apples upside-down, and treatment will be upside-up.
 
 ![Treatment and control](ApplePicture/fig/slide2.jpg){height=100}
+
+We plan to run the experiments at least three times: (i) individual randomized apples to treatment and control; (ii) create cluster to maximize the within variation; (iii) create cluster to minimize the within variation. In all three, Bill will use treatment probability of 25%, Justin 50% and Nobu 75% to evaluate the effect of not including the block variable when the treatment assignment probability vary among the blocks.
 
 Fruits will be placed at a room temperature. Every day, at a consistent time after sundown (to control for daylight variations), we will take pictures of all the apples. We will also record temperature and humidity in the room at the time of the photographs, using the same model/brand of thermometer.
 
