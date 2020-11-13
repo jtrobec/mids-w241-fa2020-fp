@@ -16,17 +16,25 @@ report and during the presentation.
     - Take picture and develop cdf.  green to brown scale on the x-axis, and y ranges from 0 to 1. 
     - [LINK](https://www.schemecolor.com/green-with-brown-color-combination.php)
 - Mad cow [LINK](https://www.mayoclinic.org/diseases-conditions/creutzfeldt-jakob-disease/diagnosis-treatment/drc-20371230#:~:text=Only%20a%20brain%20biopsy%20or,presence%20of%20Creutzfeldt%2DJakob%20disease.)
+- **need to develop the computer vision system without knowing if the object is assigned to any group.**
 
 ### Banana: random assignment
 -	`Control`: leave it as it is
 -	`Treatments`: leave apple next it to see if leaving apple next it makes the bananas go bad sooner
--    Add anchor point in the paper during the observation. 
+-    Add anchor points in the paper during the observation in order to detect the center of the objects. 
 
 ### Apple: random assignment
 - `Control`: upside up
 - `Treatments`: upside up with banana
 - Evaluate if the effect of leaving banana next to apple
 -    Add anchor point in the paper during the observation. 
+
+
+
+
+
+
+
 
 
 
