@@ -1,5 +1,8 @@
 # Summary of meeting with Professor Hugues
 
+- Advice. Make sure we talk about how the procedure can be used to measure for cancer spread. Other spatioal changes with respect to initial condition in the 
+report and during the presentation.
+
 ## Changing experiment subject from apples to other fruits
 
 ### 1.	Avocado: random assignment
@@ -12,6 +15,7 @@
 -  Cut avocado 10 days later.
     - Take picture and develop cdf.  green to brown scale on the x-axis, and y ranges from 0 to 1. 
     - [LINK](https://www.schemecolor.com/green-with-brown-color-combination.php)
+- Mad cow [LINK](https://www.mayoclinic.org/diseases-conditions/creutzfeldt-jakob-disease/diagnosis-treatment/drc-20371230#:~:text=Only%20a%20brain%20biopsy%20or,presence%20of%20Creutzfeldt%2DJakob%20disease.)
 
 ### Banana: random assignment
 -	`Control`: leave it as it is
