@@ -1,4 +1,4 @@
-# Summary of meeting with Professor Hugues
+# Summary of meeting with Professor Hughes
 
 - Advice. Make sure we talk about how the procedure can be used to measure for cancer spread. Other spatioal changes with respect to initial condition in the 
 report and during the presentation.
