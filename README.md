@@ -20,11 +20,13 @@ report and during the presentation.
 ### Banana: random assignment
 -	`Control`: leave it as it is
 -	`Treatments`: leave apple next it to see if leaving apple next it makes the bananas go bad sooner
+-    Add anchor point in the paper during the observation. 
 
 ### Apple: random assignment
 - `Control`: upside up
 - `Treatments`: upside up with banana
 - Evaluate if the effect of leaving banana next to apple
+-    Add anchor point in the paper during the observation. 
 
 
 
