@@ -11,6 +11,7 @@
 -   Evaluate which treatment was more effective than the other.  See Problem set 4 part 5.4
 -  Cut avocado 10 days later.
     - Take picture and develop cdf.  green to brown scale on the x-axis, and y ranges from 0 to 1. 
+    - [LINK](https://www.schemecolor.com/green-with-brown-color-combination.php)
 
 ### Banana: random assignment
 -	`Control`: leave it as it is
