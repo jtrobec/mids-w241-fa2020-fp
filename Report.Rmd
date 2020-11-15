@@ -23,6 +23,30 @@ This paper reports on the findings from applying different treatments to apples,
 
 This section provides the description of four experiments that we have conducted using three blocks labeled, `B`, `J` and `N`.  The probability of the treatment assign ranged between blocks. The same number of subjects were used for control and treatment in each of three blocks called `B`, `J`, and `N`
 
+Subjects were numbers through 1 to n, then, random number was generated to 
+assigne subjects to treatment and control
+
+```{r}
+id <- 1:12
+y <- sample(c(0,1),12, replace=TRUE)
+cbind(id,y)
+```
+
+For selecting 8 banans out of 9
+
+```{r}
+y <- sample(1:9,8, replace=FALSE)
+y
+```
+
+```{r}
+id <- 1:8
+y <- sample(c(0,1),8, replace=TRUE)
+cbind(id,y)
+```
+
+
+
 ## Experiment 1 (EX1)
 
 **Objective**: To evaluate if keeping applies in different position can deter the process applies being spoiled. 
