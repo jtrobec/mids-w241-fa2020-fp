@@ -15,6 +15,16 @@ library(knitr)
 
 [FINAL PROJECT REQUIREMENT](https://github.prod.oc.2u.com/UCB-MIDS/w241/tree/master/finalProject)
 
+[Schedule](https://github.prod.oc.2u.com/UCB-MIDS/w241)
+
+Weekly plan:
+
+- convert apples to matrix
+
+- perform analysis 
+
+- develop model for avocado
+
 # Background:
 
 This paper reports on the findings from applying different treatments to apples, bananas and avocados that are stored at room temperatures.  Block and complete randomization experiment design was used to evaluate the effect of treatments using the measure we developed to quantify the changes in fruit conditions based on their initial condition or relative condition compared to the control group.  The computation method we present in this can also be used to monitor spatiotemporal changes such as spread of cancer in a cancer patients or changes in land development patterns.
