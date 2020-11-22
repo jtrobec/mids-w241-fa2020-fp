@@ -1,0 +1,59 @@
+---
+title: "intro"
+author: "Bill Chung, Justin Trobec, Nobu Yamaguchi"
+date: "11/21/2020"
+output: pdf_document
+---
+
+
+# 4. Analysis
+
+## Comparing apple to apple
+
+> Long format
+
+|Names | description                         |
+|:---: |:---|
+|Block | name of the block, `B`, `J` and `N` |
+| id   | two digit id which identifies individual subject                    |
+| Yi   | 0 if it was control and 1 if it was treatment                       |
+| day  | day since the start of experiment
+| response   | Changes in subject condition observed in day t with respect to day 1|
+| temperature | temperature |
+| humidity| humidity        |
+
+```{r}
+#plot changes in response over different days while indicating block, and 
+#treatment condition
+```
+
+## Comparing bananas to bananas
+
+|Names | description                         |
+|:---: |:---|
+|Block | name of the block, `B`, `J` and `N` |
+| id   | two digit id which identifies individual subject                    |
+| Yi   | 0 if it was control and 1 if it was treatment                       |
+| day  | day since the start of experiment
+| response   | Changes in subject condition observed in day t with respect to day 1|
+| temperature | temperature |
+| humidity| humidity        |
+
+## Avocado
+
+|Names | description                         |
+|:---: |:---|
+|Block | name of the block, `B`, `J` and `N` |
+| id   | two digit id which identifies individual subject                    |
+| Yi   | 0 if it was control and 1 if it was treatment                       |
+| c1 | day since the start of experiment
+| c2 | |
+| c3 | temperature |
+| c4 | humidity        |
+| c5 | humidity        |
+
+Assume the temperature and hum did not change significantly across different days
+during the experiment. (I think this is reasonable assumption)
+
+
+

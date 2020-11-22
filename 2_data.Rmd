@@ -1,0 +1,9 @@
+---
+title: "intro"
+author: "Bill Chung, Justin Trobec, Nobu Yamaguchi"
+date: "11/21/2020"
+output: pdf_document
+---
+
+
+# 2. Description of data

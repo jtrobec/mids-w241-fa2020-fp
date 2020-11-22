@@ -1,0 +1,113 @@
+---
+title: "intro"
+author: "Bill Chung, Justin Trobec, Nobu Yamaguchi"
+date: "11/21/2020"
+output: pdf_document
+---
+
+
+# 1. Introduction
+
+## Background:
+
+This paper reports on the findings from applying different treatments to apples, bananas and avocados that are stored at room temperatures.  Block and complete randomization experiment design was used to evaluate the effect of treatments using the measure we developed to quantify the changes in fruit conditions based on their initial condition or relative condition compared to the control group.  The computation method we present in this can also be used to monitor spatiotemporal changes such as spread of cancer in a cancer patients or changes in land development patterns.
+
+
+## Purpose and need of the experiment
+
+The purpose of th
+
+With our experiment, we aim to determine if the orientation in which an apple is kept on a counter impacts its longevity.
+
+We believe we will have time to run this experiment multiple times. Each run of the experiment will work like this:
+
+Every group member will buy 12 or more apples. We will record each apple's weight in grams, and give it an ID. Next, we will randomly place $\frac{1}{2}$ of the apples in (i) upside-up position and the other half in (ii) upside-down position.  Control will be having the apples upside-down, and treatment will be upside-up.
+
+![Treatment and control](ApplePicture/fig/slide2.jpg){height=100}
+
+We plan to run the experiments at least three times: (i) individual randomized apples to treatment and control; (ii) create cluster to maximize the within variation; (iii) create cluster to minimize the within variation. In all three, Bill will use treatment probability of 25%, Justin 50% and Nobu 75% to evaluate the effect of not including the block variable when the treatment assignment probability vary among the blocks.
+
+Fruits will be placed at a room temperature. Every day, at a consistent time after sundown (to control for daylight variations), we will take pictures of all the apples. We will also record temperature and humidity in the room at the time of the photographs, using the same model/brand of thermometer.
+
+In effect, each group member is running a block of the experiment simultaneously. We will also attempt a clustered design, where we assign treatment and control based on apple type.
+
+![Four quadrant setup](ApplePicture/fig/slide3.jpg){height=100}
+
+We will use some computational tools to measure the 'spoiledness' of the apples. Pictures for a given apple will be processed by an algorithm that measures the visible changes between two images of the same fruit. Essentially, we will be tracking how quickly brown spots begin to form over the course of a 10 day period. The amount of change becomes our outcome variable. We already have a prototype of this algorithm that has been tested on some synthetically marked pictures of an apple.
+
+We do not have any particular questions for the instructors at this time -- we received some good early feedback from Micah after teams were first created. We are interested in requesting grant money to cover the purchase of apples, thermometers and scales if possible.
+
+
+## Description of experiment 
+
+This section provides the description of four experiments that we have conducted using three blocks labeled, `B`, `J` and `N`.  The probability of the treatment assign ranged between blocks. The same number of subjects were used for control and treatment in each of three blocks called `B`, `J`, and `N`
+
+Subjects were numbers through 1 to n, then, random number was generated to 
+assigne subjects to treatment and control
+
+```{r}
+id <- 1:12
+y <- sample(c(0,1),12, replace=TRUE)
+cbind(id,y)
+```
+
+For selecting 8 banans out of 9
+
+```{r}
+y <- sample(1:9,8, replace=FALSE)
+y
+```
+
+```{r}
+id <- 1:8
+y <- sample(c(0,1),8, replace=TRUE)
+cbind(id,y)
+```
+
+
+### Experiment 1 (EX1)
+
+**Objective**: To evaluate if keeping applies in different position can deter the process applies being spoiled. 
+
+  -	This experiment was conducted under the assumption that the skin of organic 
+  apples will turn brown if there were kept at a room temperature.
+
+  -	Treatment was placing apple where apple top is facing upward, and control 
+  is placing apple top facing the floor. (see Figure 1.1)
+
+  -	Individual apples were randomly assigned to control and treatment.  
+  - Pictures of the apples were then taken on daily basis together with indoor humidity
+  and temperature.  
+  - The weight of each apples are also measured at the start of the experiment 
+  and the end of the experiment.  
+
+### Experiment 2 (EX2)
+
+**Objective**: To evaluate if keeping apples together with bananas will deter or
+expedite the process of applies being spoiled.
+
+  -	Treatment is placing an apple adjacent to a banana. 
+  -	4 randomly selected apples were placed adjacent to 4 randomly selected bananas
+  -	4 randomly selected apples were then placed by itself as a control group.
+  -	Pictures of apples and bananas were taken on daily basis to monitor the changes in
+  fruit skin color.   
+
+### Experiment 3 (EX3)
+
+**Objective**: To evaluate if keeping bananas together with apples will deter or expedite the process of applies being spoiled.
+
+  -	Treatment is placing a banana adjacent to an apple. 
+  -	4 randomly selected apples were placed adjacent to 4 randomly selected bananas
+  -	4 randomly selected bananas were then placed by itself as a control group.
+  -	Pictures of apples and bananas were taken on daily basis to monitor the 
+  changes in fruit skin color.   
+
+### Experiment 4(EX4)
+
+**Objective**: To evaluate the different treatment effects, in each of block, six
+avocados were store in a bag (T1), plastic wrap (T2) and Zip lock (T3).  
+
+  -	Weight of the avocado were measured in the beginning of the experiment and at the
+  end of the experiment.
+  -	After 10 days, the avocados were cut open. 
+  -	Picture were taken and processed.

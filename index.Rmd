@@ -1,0 +1,26 @@
+---
+title: \vspace{-1.5cm} Quantifying the treatment effects on prolonging the freshness of apples, bananas and avocado 
+author: \vspace{-1.5cm} Bill Chung, Justin Trobec, Nobu Yamaguchi
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r child = '1_intro.Rmd'}
+```
+
+```{r child = '2_data.Rmd'}
+```
+
+```{r child = '3_eda.Rmd'}
+```
+
+```{r child = '4_analysis.Rmd'}
+```
+
+```{r child = '5_conclusion.Rmd'}
+```
+
