@@ -6,4 +6,100 @@ output: pdf_document
 ---
 
 
-# 2. Description of data
+# 2.  Sata
+
+
+### Description of data
+
+### Apple 
+
+Daily pictures of the apples were taken and the raw data from all three blocks are 
+stroed in xx.  The detaild python code for converting apples pictures to data 
+are included in xx and qualitative description of the flow are descripted in here.
+
+`Treatment` was ..
+
+This was used as pre-experiment data to develop the process of the converting 
+picture to xx. 
+
+The initital condition was used to quantify the changes in apple skin colors.
+
+### Banana
+
+Daily pictures of banana were taken..
+
+The picture (xx) that were read using Opencv library were first decomposed into
+Hue, Saturation and Value (HSA) and the range of Hue, Saturation and Value
+that will be used to filter banana image only were determined using `getEdage.py`
+and the information found at **http://colorizer.org**
+
+After first filtering images, `img`, based on predifined HSA, the filtered images, `mask`,
+were used to then conver the background including the apples (see figure) into black
+and saved as `imgResult`.  Then, contours of the banana were extracted together with 
+other noise in the figure, then only the regions with closed contour with area greater
+than predified value were extracted and saved for the analysis.
+
+The initital condition was used to quantify the changes in banana skin colors.
+
+
+### Avocado
+
+Unlike apples and avocad, the observation of avocados that received treatments
+and control was made once on day xx by slicing avocados in 1/2 and comparing the
+fraction of avocado region that turned brown...
+
+## Converting picture to data 
+
+
+## Data from expereiment 4
+|Names | description                         |
+|:---: |:---|
+|Block | name of the block, `B`, `J` and `N` |
+|id    | two digit id which identifies individual subject                    |
+| Yi   | 0 if it was control and 1 if it was treatment                       |
+| Pt   | Changes in subject condition observed in day t with respect to day 1|
+
+The chagnes in subject condition is measured in the following procedure.  The picture
+of apple cropped based on its contour in the picture were converted to 256 by 256 matrix in grey scale.  This matrix is then converted to a vector and normalized.
+
+$\vec{v}_1$ represent the condition of apple in day 1.   
+
+The picture of the apple from the subsequent days were also cropped based on the 
+procedure descriped in `method`, then stored in $\vec{v}_2 .. \vec{v}_{25}$.  
+The EX1 was ended on day 25 since the both the skin of the apples in both the control and treatments remain unchanged compared to day 1.  Considering the time limit, the
+team decided to end the experiment on day 25 and start EX2, EX3 and EX4.
+
+Pt is defined as the following
+
+$$Pt = \frac{\vec{v}_1 \cdot \vec{v}_t}{\vec{v}_1^T \cdot \vec{v}_1}$$
+
+Since all the vectors are normalized, $Pt$ will range between 0 and 1. 0 indicating 
+The apple from day t looks completely different from day 0.  1 indicating that 
+the condition did not change at all.
+
+The plot of $pt$ for all control and treatment for each blocks are shown in the fiugre 
+below. 
+
+   
+## Data from expereiment 4
+
+|Names | description                         |
+|:---: |:---|
+|Block | name of the block, `B`, `J` and `N` |
+|id    | two digit id which identifies individual subject                    |
+| Yi   | 0 if it was control and 1 if it was treatment                       |
+| Cafe Noir    | RGB(84,59,35)  |
+| Pastel Brown | RGB(132,105,84)  |
+| White Coffee | RGB(223,223,212)  |
+| June Bud | RGB(165,215,77)  |
+| Dark Lemon Lime | RGB(129,190,28)  |
+| White           | RGB(255,255,255)  |
+| Black           | RGB(0,0,0) |
+
+[LINK](https://www.schemecolor.com/green-with-brown-color-combination.php)
+
+> Apply KNN to clsuter the pixles.
+> Remove the ones that are clustered with white and black
+> Normalized the ones that are in other groups.
+> Compare the composition. 
+
