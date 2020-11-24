@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: pdf_notebook
+---
+
+[LINK](https://dahtah.github.io/imager/imager.html)
+[](http://bioconductor.org/packages/release/bioc/html/EBImage.html)
+
+```{r}
+library(magick)
+
+
+library(jpeg)#for spliting into RGB
+
+library("EBImage") #for resizing the image
+```
+
+```{r}
+path <- "data/N/experiment4/after_cutting/a1.JPG"
+#avo <- image_read("data/N/experiment4/after_cutting/a1.JPG")
+
+img <- readJPEG(path)
+dim(img)
+
+R <- img[,,1]
+G <- img[,,2]
+B <- img[,,3]
+```
+
+```{r}
+x <- readImage(path)
+
+# width and height of the original image
+dim(x)[1:2]
+
+# scale to a specific width and height
+y <- resize(x, w = 255, h = 255)
+
+# scale by 50%; the height is determined automatically so that
+# the aspect ratio is preserved
+
+dim(y)
+# show the scaled image
+#display(y)
+
+# extract the pixel array
+z <- imageData(y)
+
+# or
+z <- as.array(y)
+```
+
+```{r}
+255*255
+R <- z[,,1]
+dim(R)
+class(R)
+```
+```{r}
+m <- matrix(c(1,2,3,4,5,6),nrow=3)
+m
+as.vector(m)
+```
+
+
+
+```{r}
+r <- as.vector(R)
+dim(r)
+```
+
+
