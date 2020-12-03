@@ -1,0 +1,124 @@
+---
+title: "Data wrangling"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(data.table)
+library(stargazer)
+library(dplyr)
+library(tidyverse)
+library(patchwork)
+library(sandwich)
+library(lmtest)#coeftest()
+library(bcp)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+getChangeDate <- function(df) {
+  #this function is called after 
+  #the 'black_ratio' in the raw data has been
+  #coverted to `y` after taking the individual fixed effect into account
+  d_temp <- as.data.frame(df)
+  dg <- d_temp$y
+  set.seed(1000)
+  bcp_x <- bcp(dg, return.mcmc = TRUE)
+  #plot(bcp_x)
+  
+  bcp_sum <- as.data.frame(summary(bcp_x))
+  bcp_sum$id <- 1:length(dg)
+  #selecting draft_number with posterior probabltiy greater than 0.2
+  sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
+  #by this time all the bananas went bad
+  sel <- sel[sel$id <8,]
+  sel <- sel[which.max(sel$Probability),]
+  #get the id
+  time_of_change <- time(dg)[sel$id]
+  return(time_of_change[1])
+}
+```
+
+
+## Data Cleaning
+
+```{r}
+d <- fread('banana.csv',header=FALSE, sep=",")
+names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature', 'black_ratio', 'weight')
+head(d)
+```
+
+```{r}
+d %>% ggplot(aes(x = day, y = black_ratio)) + 
+  geom_point(aes(color = treatment)) 
+```
+
+```{r}
+d[,b_mu:=mean(black_ratio), by = .(block,banana_number)]
+d[,y := black_ratio - b_mu]
+```
+
+```{r}
+d %>% ggplot(aes(x = day, y = y)) + 
+  geom_point(aes(color = treatment)) 
+```
+
+```{r}
+db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
+head(db)
+
+write.csv(db,"db.csv")
+```
+
+```{r}
+db[,b_name := paste0(block,banana_number)]
+db <- db[order(rank(b_name), y)]
+dim(db)
+head(db)
+b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
+                       treatment = numeric(0),
+                       d_turn = numeric(0) )
+#has 160 rows
+for (val in 1:16)
+{
+ start <- 1 + (val-1)*10
+ end <- (10*val)
+ val_block   <- db[start,block]
+ val_subject <- db[start,banana_number]
+ val_treat   <- db[start,treatment]
+ 
+ # # print(paste(start,":",end))
+ d_temp <- db[start:end,]
+ d_turn <- getChangeDate(d_temp)
+ b_result[val,] <- c(val_block,val_subject,val_treat,d_turn)
+}
+b_result
+```
+
+## Code for mannual confirmation
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+id <- 16
+start <- 1 + (id-1)*10
+end <- start + 9
+d_temp <- as.data.frame(db[start:end,])
+
+dg <- d_temp$y
+set.seed(1000)
+bcp_x <- bcp(dg, return.mcmc = TRUE)
+plot(bcp_x)
+
+bcp_sum <- as.data.frame(summary(bcp_x))
+bcp_sum$id <- 1:length(dg)
+#selecting draft_number with posterior probabltiy greater than 0.2
+sel <- as.data.frame(bcp_sum[which(bcp_x$posterior.prob > 0.2), ])
+sel <- sel[sel$id <7,]
+sel <- sel[which.max(sel$Probability),]
+#get the id
+time_of_change <- time(dg)[sel$id]
+time_of_change[1]
+```
+
