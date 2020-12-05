@@ -7,7 +7,8 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+  
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 library(data.table)
 library(stargazer)
 library(dplyr)
@@ -34,7 +35,7 @@ getChangeDate <- function(df) {
   #selecting draft_number with posterior probabltiy greater than 0.2
   sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
   #by this time all the bananas went bad
-  sel <- sel[sel$id <8,]
+  sel <- sel[sel$id <9,]
   sel <- sel[which.max(sel$Probability),]
   #get the id
   time_of_change <- time(dg)[sel$id]
@@ -42,36 +43,103 @@ getChangeDate <- function(df) {
 }
 ```
 
+# Banana
 
 ## Data Cleaning
 
 ```{r}
 d <- fread('banana.csv',header=FALSE, sep=",")
-names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature', 'black_ratio', 'weight')
-head(d)
+names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 
+              'temperature', 'black_ratio', 'weight')
 ```
+
+- The following figure indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
+blocks but fixed within blocks)
+
+- The individual fixed effect could have caused by how the picture was taken by
+different individuals and block fixed effect could have been the result of different
+enviromental condition (i.e., temperature of the house or humidity or lighting).
 
 ```{r}
 d %>% ggplot(aes(x = day, y = black_ratio)) + 
   geom_point(aes(color = treatment)) 
 ```
 
+- The individual and block fixed had been taken out in the following figure
+
 ```{r}
+#remove the fixed effect
 d[,b_mu:=mean(black_ratio), by = .(block,banana_number)]
 d[,y := black_ratio - b_mu]
-```
 
-```{r}
 d %>% ggplot(aes(x = day, y = y)) + 
   geom_point(aes(color = treatment)) 
-```
 
-```{r}
+#save the result of the detrended data
+
 db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
-head(db)
 
 write.csv(db,"db.csv")
 ```
+
+- The percent of `black-ratio` should be non-decreasing function of days, but
+we have noticed that `black_ratio` can decrease when the tip of the banana withers
+which cause size of the banana cropped during the image processing part.
+
+- To account for such error introduced while measuring the `black_ratio`, one of 
+off-line abrupt change detection algorithm was employeed to detect changes in 
+`blac_ratio` while accounting for such small noise. 
+
+```{r}
+#included the detrended data 
+db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
+
+## change the format to process that data
+db[,b_name := paste0(block,banana_number)]
+db <- db[order(rank(b_name), y)]
+dim(db)
+head(db)
+b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
+                       treatment = numeric(0),
+                       d_turn = numeric(0) )
+
+write.csv(db,"db.csv")
+```
+
+
+## Estimate the treatment effect
+
+- The response is the day at which rapid deteroriation of banana condition was
+observed and the following figure shows there were detected 
+
+TODO: Need to figure out how to suppress the output
+
+### Code for mannual confirmation
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+#try 3 and 15 for demonstration
+id <- 3
+start <- 1 + (id-1)*10
+end <- start + 9
+d_temp <- as.data.frame(db[start:end,])
+
+dg <- d_temp$y
+set.seed(1000)
+bcp_x <- bcp(dg, return.mcmc = TRUE)
+plot(bcp_x)
+
+bcp_sum <- as.data.frame(summary(bcp_x))
+bcp_sum$id <- 1:length(dg)
+#selecting draft_number with posterior probabltiy greater than 0.2
+sel <- as.data.frame(bcp_sum[which(bcp_x$posterior.prob > 0.2), ])
+sel <- sel[sel$id <9,]
+sel <- sel[which.max(sel$Probability),]
+#get the id
+time_of_change <- time(dg)[sel$id]
+time_of_change[1]
+```
+
+### Get the data
 
 ```{r}
 db[,b_name := paste0(block,banana_number)]
@@ -95,30 +163,144 @@ for (val in 1:16)
  d_turn <- getChangeDate(d_temp)
  b_result[val,] <- c(val_block,val_subject,val_treat,d_turn)
 }
+
 b_result
 ```
 
-## Code for mannual confirmation
+```{r}
+#get control and treatment data
+b_control <- as.integer(b_result[b_result[,"treatment"] == "control","d_turn"])
+b_treatment <- as.integer(b_result[b_result[,"treatment"] == "treatment","d_turn"])
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-id <- 16
-start <- 1 + (id-1)*10
-end <- start + 9
-d_temp <- as.data.frame(db[start:end,])
+#put them into a vector
+Z <- c(b_control,b_treatment)
 
-dg <- d_temp$y
-set.seed(1000)
-bcp_x <- bcp(dg, return.mcmc = TRUE)
-plot(bcp_x)
+#get the length of each vectors
+n <- length(b_control)
+m <- length(b_treatment)
+N <- length(Z)
 
-bcp_sum <- as.data.frame(summary(bcp_x))
-bcp_sum$id <- 1:length(dg)
-#selecting draft_number with posterior probabltiy greater than 0.2
-sel <- as.data.frame(bcp_sum[which(bcp_x$posterior.prob > 0.2), ])
-sel <- sel[sel$id <7,]
-sel <- sel[which.max(sel$Probability),]
-#get the id
-time_of_change <- time(dg)[sel$id]
-time_of_change[1]
+# Number of permutations
+K = 1000
+
+# Test statistic
+getMean <- function(A,B) abs(mean(A) - mean(B))
+
+# Test statistic for the observed sample
+b_mean <- getMean(b_control,b_treatment)
+
+# Vector of test statistics for each permutation
+TT <- vector()
+
+# Permutation test
+for(i in 1:K){
+ #set.seed(i)
+ Z.pi <- sample(Z, N, replace = FALSE)
+ TT[i] <- getMean(Z.pi[1:n], Z.pi[(n+1):(n+m)])
+}
+
+# Visualising the permuted test statistics
+par(bg = 'grey')
+hist(TT)
+abline(v = b_mean , lwd = 2, col = "yellow")
+box()
+
+# approximate p-value
+mean(TT>b_mean )
 ```
 
+
+
+# AVOCADO
+
+```{r}
+getIncre <- function(df) {
+  #takes avocado cumuluative hue value
+  #returns frequency for each value of hue
+  #which will be used to create sample data
+  len <- dim(df)[1]
+  H_vector <- vector()
+  
+  for(i in 1:len){
+     #set.seed(i)
+     if (i == 1){
+        H_vector[1] <- df[1,2]
+     }
+     else{
+     H_vector[i] <- (df[i,2]-df[i-1,2])*10
+     }
+  }
+  result1 <- cbind(df,H_vector)
+  result <- get_ind_data(result1)
+  return(result)
+}
+
+
+get_ind_data <- function(df) {
+ sample <- vector()
+ len <- dim(df)[1]
+ for(i in 1:len){
+    add_it <- rep(as.data.frame(df[i,1])[[1]],as.data.frame(df[i,3])[[1]])
+    sample <- c(sample,add_it)
+ }
+return(sample)
+}
+
+#######################################################
+# Assumend data format
+# will all be different but it ranges from 0 to 100
+########################################################
+percent1 <- c(0,55.5,57.8,65,78,81,96,100)
+#same scale for all avocados
+hue1 <- c(1,15,18,21,25,35,37,40)
+df1 <- cbind(hue1, percent1)
+
+
+percent2 <- c(0,40,41.8,44,60,70,80,100)
+#same scale for all avocados
+hue2 <- c(1,15,18,21,25,35,37,40)
+df2 <- cbind(hue1, percent1)
+########################################################
+```
+
+### Test based on the maximum distance between empirical distributions
+
+```{r}
+control <- getIncre(df1)
+treatment <- getIncre(df2)
+
+Z <- c(control,treatment)
+n <- length(control )
+m <- length(treatment)
+N <- length(Z)
+
+# Number of permutations
+K = 10000
+
+# Test statistic
+getD <- function(A,B) ks.test(A,B)$statistic
+
+# Test statistic for the observed sample
+TO <- getD(control,treatment)
+
+# Vector of test statistics for each permutation
+TT <- vector()
+
+# Permutation test
+for(i in 1:K){
+  set.seed(i)
+  Z.pi <- sample(Z, N, replace = FALSE)
+  TT[i] <- getD(Z.pi[1:n], Z.pi[(n+1):(n+m)])
+}
+
+# Visualising the permuted test statistics
+hist(TT)
+abline(v = TO, lwd = 2, col = "red")
+box()
+
+mean(TT>TO)
+```
+
+
+
+## Data Cleaning
