@@ -135,12 +135,12 @@ def get_blackness_percentage_for_hue(img, hue):
     return blackness
 
 def main():
-    avo_image_lists = [(bill_image_names, bill_avocado_images), 
-                        (nobu_image_names, nobu_avocado_images), 
-                        (justin_image_names, justin_avocado_images)]
+    avo_image_lists = [('B', bill_image_names, bill_avocado_images), 
+                        ('N', nobu_image_names, nobu_avocado_images), 
+                        ('J', justin_image_names, justin_avocado_images)]
 
     dataframes = []
-    for img_names, img_list in avo_image_lists:
+    for block_id, img_names, img_list in avo_image_lists:
         images = load_avocado_images(img_list)
         sized = set_consistent_width(images)
         cropped = crop_avocado_images(sized, crop_avocado_image_1)
@@ -148,8 +148,9 @@ def main():
         black_pct = []
         for img in cropped:
             black_pct.append([get_blackness_percentage_for_hue(img, hue) for hue in range(50)])
-        data = { k:v for (k,v) in zip(img_names, black_pct) }
-        df = pd.DataFrame(data, columns=img_names)
+        names_blocked = ['{}{}'.format(block_id, x) for x in img_names]
+        data = { k:v for (k,v) in zip(names_blocked, black_pct) }
+        df = pd.DataFrame(data, columns=names_blocked)
         dataframes.append(df)
 
     final_data = reduce(lambda x, y: pd.concat([x, y], axis=1), dataframes)
