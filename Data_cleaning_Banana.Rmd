@@ -54,7 +54,6 @@ d <- fread('banana.csv',header=FALSE, sep=",")
 names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 
               'temperature', 'black_ratio', 'weight')
 
-head(d)
 ```
 
 - The following figure indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
@@ -64,11 +63,6 @@ blocks but fixed within blocks)
 different individuals and block fixed effect could have been the result of different
 enviromental condition (i.e., temperature of the house or humidity or lighting).
 
-```{r}
-d %>% ggplot(aes(x = day, y = black_ratio)) + 
-  geom_point(aes(color = treatment)) 
-```
-
 - The individual and block fixed had been taken out in the following figure
 
 ```{r}
@@ -76,8 +70,13 @@ d %>% ggplot(aes(x = day, y = black_ratio)) +
 d[,b_mu:=mean(black_ratio), by = .(block,banana_number)]
 d[,y := black_ratio - b_mu]
 
+d %>% ggplot(aes(x = day, y = black_ratio)) + 
+  geom_point(aes(color = treatment)) 
+
 d %>% ggplot(aes(x = day, y = y)) + 
   geom_point(aes(color = treatment)) 
+
+
 
 #save the result of the detrended data
 
@@ -122,7 +121,7 @@ TODO: Need to figure out how to suppress the output
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 #try 3 and 15 for demonstration
-id <- 3
+id <- 16
 start <- 1 + (id-1)*10
 end <- start + 9
 d_temp <- as.data.frame(db[start:end,])
@@ -172,6 +171,25 @@ for (val in 1:16)
 b_result
 ```
 
+# Analysis
+
+> We have used block random assignement design.  
+> We have three blocks, `B`, `N`, and `J` and the probability of assignement
+to treatment, $p(d=1)=0.5$ for all three which allows us to later pool the data
+across the block and estimate ATE (page 76 FE)
+
+> We have selected block radomization to reduce sampling variablity (see page 72 FE).
+The subjects within the group are from the same brunch [LINK](https://kids.wng.org/node/3586)
+such that subjects in each block have similiar potential outcomes.  This also ensured
+that certain subgroups are available for seperate analysis (see page 71 FE)
+
+## Sharp null hypothesis
+
+> We began by testing sharp null hypothesis of no treatment effect
+
+> the treatment effect was measured by the day beyond which the black ratio
+rapidly increased. 
+
 ```{r}
 #get control and treatment data
 b_control <- as.integer(b_result[b_result[,"treatment"] == "control","d_turn"])
@@ -186,7 +204,7 @@ m <- length(b_treatment)
 N <- length(Z)
 
 # Number of permutations
-K = 1000
+K = 10000
 
 # Test statistic
 getMean <- function(A,B) abs(mean(A) - mean(B))
@@ -212,5 +230,24 @@ box()
 
 # approximate p-value
 mean(TT>b_mean )
+```
+
+## Regression Estimator for Block Randomization
+
+> We have `3` blocks, `B`, `N`, and `J` with 8 samples in each block.
+
+$$Y_i = c + D + B + N + J$$
+
+TODO improve description
+where `c` and constant and `D`, `B`, `N`, and `J` are dummy varible with 1 and 0
+
+```{r}
+mod_b <- lm(d_turn ~ treatment + as.factor(block), data = b_result)
+coeftest(mod_b, vcov = vcovHC(mod_b, type = "HC1"))
+```
+
+```{r}
+b_result
+b_result %>% ggplot(aes(x = d_turn, fill=treatment)) + geom_bar() +  facet_wrap(~block,ncol = 1)
 ```
 
