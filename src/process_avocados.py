@@ -9,7 +9,8 @@ from functools import reduce
 from process_images import display_image_set, image_resize
 from PIL import Image
 
-nobu_image_names = ['ta1', 'ca2', 'ta3', 'ca4', 'cb1', 'tb2', 'cb3', 'tb4', 'cc1', 'tc2', 'cc3', 'tc4']
+nobu_image_names =     ['ta1', 'ca2', 'ta3', 'ca4', 'cb1', 'tb2', 'cb3', 'tb4', 'cc1', 'tc2', 'cc3', 'tc4']
+nobu_new_image_names = ['t1',  'c2',  't3',  'c4',  'c5',  't6',  'c7',  't8',  'c9',  't10', 'c11', 't12']
 nobu_avocado_images = ['./data/N/experiment4/after_cutting/{}.jpg'.format(x) for x in nobu_image_names]
 justin_image_names = ['t1', 't4', 't7', 't8', 't9', 't11', 'c2', 'c3', 'c5', 'c6', 'c10', 'c12']
 justin_avocado_images = ['./data/J/experiment3/{}.jpg'.format(x) for x in justin_image_names]
@@ -148,6 +149,8 @@ def main():
         black_pct = []
         for img in cropped:
             black_pct.append([get_blackness_percentage_for_hue(img, hue) for hue in range(50)])
+        if block_id == 'N':
+            img_names = nobu_new_image_names
         names_blocked = ['{}{}'.format(block_id, x) for x in img_names]
         data = { k:v for (k,v) in zip(names_blocked, black_pct) }
         df = pd.DataFrame(data, columns=names_blocked)
