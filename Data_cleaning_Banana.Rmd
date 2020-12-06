@@ -107,6 +107,7 @@ b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
                        d_turn = numeric(0) )
 
 write.csv(db,"db.csv")
+
 ```
 
 
@@ -120,8 +121,8 @@ TODO: Need to figure out how to suppress the output
 ### Code for mannual confirmation
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
-#try 3 and 15 for demonstration
-id <- 16
+#try 11 and 24 for demonstration
+id <- 24
 start <- 1 + (id-1)*10
 end <- start + 9
 d_temp <- as.data.frame(db[start:end,])
@@ -153,7 +154,7 @@ b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
                        treatment = numeric(0),
                        d_turn = numeric(0) )
 #has 160 rows
-for (val in 1:16)
+for (val in 1:24)
 {
  start <- 1 + (val-1)*10
  end <- (10*val)
@@ -250,4 +251,12 @@ coeftest(mod_b, vcov = vcovHC(mod_b, type = "HC1"))
 b_result
 b_result %>% ggplot(aes(x = d_turn, fill=treatment)) + geom_bar() +  facet_wrap(~block,ncol = 1)
 ```
+
+```{r}
+db <- as.data.table(b_result)
+db
+b_result2 <- db[, .(round(mean(as.integer(d_turn))),0), by = .(block,treatment)][,1:3]
+print(b_result2)
+```
+
 
