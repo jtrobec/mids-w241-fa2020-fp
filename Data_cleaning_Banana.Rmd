@@ -1,0 +1,216 @@
+---
+title: "Data wrangling"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+  
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(data.table)
+library(stargazer)
+library(dplyr)
+library(tidyverse)
+library(patchwork)
+library(sandwich)
+library(reshape2)
+library(lmtest)#coeftest()
+library(bcp)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+getChangeDate <- function(df) {
+  #this function is called after 
+  #the 'black_ratio' in the raw data has been
+  #coverted to `y` after taking the individual fixed effect into account
+  d_temp <- as.data.frame(df)
+  dg <- d_temp$y
+  set.seed(1000)
+  bcp_x <- bcp(dg, return.mcmc = TRUE)
+  #plot(bcp_x)
+  
+  bcp_sum <- as.data.frame(summary(bcp_x))
+  bcp_sum$id <- 1:length(dg)
+  #selecting draft_number with posterior probabltiy greater than 0.2
+  sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
+  #by this time all the bananas went bad
+  sel <- sel[sel$id <9,]
+  sel <- sel[which.max(sel$Probability),]
+  #get the id
+  time_of_change <- time(dg)[sel$id]
+  return(time_of_change[1])
+}
+```
+
+# Banana
+
+## Data Cleaning
+
+```{r}
+#data is given in a long format
+d <- fread('banana.csv',header=FALSE, sep=",")
+names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 
+              'temperature', 'black_ratio', 'weight')
+
+head(d)
+```
+
+- The following figure indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
+blocks but fixed within blocks)
+
+- The individual fixed effect could have caused by how the picture was taken by
+different individuals and block fixed effect could have been the result of different
+enviromental condition (i.e., temperature of the house or humidity or lighting).
+
+```{r}
+d %>% ggplot(aes(x = day, y = black_ratio)) + 
+  geom_point(aes(color = treatment)) 
+```
+
+- The individual and block fixed had been taken out in the following figure
+
+```{r}
+#remove the fixed effect
+d[,b_mu:=mean(black_ratio), by = .(block,banana_number)]
+d[,y := black_ratio - b_mu]
+
+d %>% ggplot(aes(x = day, y = y)) + 
+  geom_point(aes(color = treatment)) 
+
+#save the result of the detrended data
+
+db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
+
+write.csv(db,"db.csv")
+```
+
+- The percent of `black-ratio` should be non-decreasing function of days, but
+we have noticed that `black_ratio` can decrease when the tip of the banana withers
+which cause size of the banana cropped during the image processing part.
+
+- To account for such error introduced while measuring the `black_ratio`, one of 
+off-line abrupt change detection algorithm was employeed to detect changes in 
+`blac_ratio` while accounting for such small noise. 
+
+```{r}
+#included the detrended data 
+db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
+
+## change the format to process that data
+db[,b_name := paste0(block,banana_number)]
+db <- db[order(rank(b_name), y)]
+dim(db)
+head(db)
+b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
+                       treatment = numeric(0),
+                       d_turn = numeric(0) )
+
+write.csv(db,"db.csv")
+```
+
+
+## Estimate the treatment effect
+
+- The response is the day at which rapid deteroriation of banana condition was
+observed and the following figure shows there were detected 
+
+TODO: Need to figure out how to suppress the output
+
+### Code for mannual confirmation
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+#try 3 and 15 for demonstration
+id <- 3
+start <- 1 + (id-1)*10
+end <- start + 9
+d_temp <- as.data.frame(db[start:end,])
+
+dg <- d_temp$y
+set.seed(1000)
+bcp_x <- bcp(dg, return.mcmc = TRUE)
+plot(bcp_x)
+
+bcp_sum <- as.data.frame(summary(bcp_x))
+bcp_sum$id <- 1:length(dg)
+#selecting draft_number with posterior probabltiy greater than 0.2
+sel <- as.data.frame(bcp_sum[which(bcp_x$posterior.prob > 0.2), ])
+sel <- sel[sel$id <9,]
+sel <- sel[which.max(sel$Probability),]
+#get the id
+time_of_change <- time(dg)[sel$id]
+time_of_change[1]
+```
+
+### Get the data
+
+```{r}
+db[,b_name := paste0(block,banana_number)]
+db <- db[order(rank(b_name), y)]
+dim(db)
+head(db)
+b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
+                       treatment = numeric(0),
+                       d_turn = numeric(0) )
+#has 160 rows
+for (val in 1:16)
+{
+ start <- 1 + (val-1)*10
+ end <- (10*val)
+ #get the subject information
+ val_block   <- db[start,block]
+ val_subject <- db[start,banana_number]
+ val_treat   <- db[start,treatment]
+ 
+ # # print(paste(start,":",end))
+ d_temp <- db[start:end,]
+ d_turn <- getChangeDate(d_temp)
+ b_result[val,] <- c(val_block,val_subject,val_treat,d_turn)
+}
+
+b_result
+```
+
+```{r}
+#get control and treatment data
+b_control <- as.integer(b_result[b_result[,"treatment"] == "control","d_turn"])
+b_treatment <- as.integer(b_result[b_result[,"treatment"] == "treatment","d_turn"])
+
+#put them into a vector
+Z <- c(b_control,b_treatment)
+
+#get the length of each vectors
+n <- length(b_control)
+m <- length(b_treatment)
+N <- length(Z)
+
+# Number of permutations
+K = 1000
+
+# Test statistic
+getMean <- function(A,B) abs(mean(A) - mean(B))
+
+# Test statistic for the observed sample
+b_mean <- getMean(b_control,b_treatment)
+
+# Vector of test statistics for each permutation
+TT <- vector()
+
+# Permutation test
+for(i in 1:K){
+ #set.seed(i)
+ Z.pi <- sample(Z, N, replace = FALSE)
+ TT[i] <- getMean(Z.pi[1:n], Z.pi[(n+1):(n+m)])
+}
+
+# Visualising the permuted test statistics
+par(bg = 'grey')
+hist(TT)
+abline(v = b_mean , lwd = 2, col = "yellow")
+box()
+
+# approximate p-value
+mean(TT>b_mean )
+```
+

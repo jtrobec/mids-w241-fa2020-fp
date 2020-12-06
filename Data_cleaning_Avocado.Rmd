@@ -1,0 +1,391 @@
+---
+title: "Data wrangling"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+  
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(data.table)
+library(stargazer)
+library(dplyr)
+library(tidyverse)
+library(patchwork)
+library(sandwich)
+library(reshape2)
+library(lmtest)#coeftest()
+library(bcp)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+getChangeHUE <- function(df) {
+  #this function is called after 
+  d_temp <- as.data.frame(df)
+  #this is the perent of hue information is stored
+  dg <- d_temp$value
+  set.seed(1000)
+  bcp_x <- bcp(dg, return.mcmc = TRUE)
+  #plot(bcp_x)
+  
+  bcp_sum <- as.data.frame(summary(bcp_x))
+  bcp_sum$id <- 1:length(dg)
+  #selecting draft_number with posterior probabltiy greater than 0.2
+  sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
+  #by this time all the bananas went bad
+  sel <- sel[sel$id <49,]
+  sel <- sel[which.max(sel$Probability),]
+  #get the id
+  time_of_change <- time(dg)[sel$id]
+  return(time_of_change[1])
+}
+
+getIncre <- function(df) {
+  #takes avocado cumuluative hue value
+  #returns frequency for each value of hue
+  #which will be used to create sample data
+  max <- max(df)
+  min <- min(df)
+  diff <- max-min
+  
+  hue_index <- 0:49
+  len <- dim(df)[1]
+  H_vector <- vector()
+  
+  for(i in 1:len){
+     #set.seed(i)
+     if (i == 1){
+        #initial value is 0, the reference point
+        H_vector[1] <- 0
+     }
+     else{
+     #H_vector[i] <- (df[i]-df[i-1])*100
+     H_vector[i] <- (df[i]-df[i-1])
+     }
+  }
+  result <- H_vector
+  #result1 <- cbind(hue_index,H_vector)
+  #result <- get_ind_data(result1)
+  return(result)
+}
+
+#create sample data based on pdf
+get_ind_data <- function(df) {
+ sample <- vector()
+ len <- dim(df)[1]
+ for(i in 1:len){
+    add_it <- rep(df[i,1][[1]],round(df[i,2][[1]],2)*100)
+    sample <- c(sample,add_it)
+ }
+return(sample)
+}
+
+
+#################################################
+get_ks_permutation <- function(control,treat,sim) {
+  #control is sample data for control
+  #treat is the sampe data for treat,
+  control <- control
+  treatment <- treat
+  
+  Z <- c(control,treatment)
+  n <- length(control )
+  m <- length(treatment)
+  N <- length(Z)
+  
+  # Number of permutations
+  K = sim
+
+  # Test statistic
+  getD <- function(A,B) ks.test(A,B)$statistic
+  
+  # Test statistic for the observed sample
+  maxD <- getD(control,treatment)
+  maxD
+  # Vector of test statistics for each permutation
+  TT <- vector()
+  
+  # Permutation test
+  for(i in 1:K){
+    set.seed(i)
+    Z.pi <- sample(Z, N, replace = FALSE)
+    TT[i] <- getD(Z.pi[1:n], Z.pi[(n+1):(n+m)])
+  }
+  
+  # Visualising the permuted test statistics
+  hist(TT)
+  abline(v = maxD, lwd = 2, col = "red")
+  box()
+  
+  mean(TT>maxD)
+}
+
+```
+
+
+# AVOCADO
+
+## Read and format data
+
+> Block and randomization experimental design.  Three blocks and 12 subjects each
+
+```{r}
+da <- fread('avocado_blackness.csv')
+dim(da)
+head(da)
+tail(da)
+colnames(da)
+#convert wide to long extract data attribute 
+#and create new columns
+df <-(melt(da, id.vars=c("hue_index")))
+df$block<- substring(df$variable,0,1)
+df$treatment <- substring(df$variable,2,2)
+df$id <- substring(df$variable,3,4)
+head(df)
+d_avo_raw <- df[,c("block","treatment","id","hue_index","value")]
+dim(d_avo_raw)
+```
+
+> The following figure shows both fixed effect for block and individual level
+> Y axis shows percent [TODO]
+
+```{r}
+d_avo_raw %>% ggplot(aes(x = hue_index, y = value, color=treatment)) + 
+  geom_point(aes(color = treatment)) + facet_wrap(~block,ncol = 1) + xlim(20,35)
+```
+
+## Get individual hue count data
+
+> TODO
+> The highter the value of hue, the stronger the filter effect.  For an example,
+> For Bill, the background was black
+> For Nobu and Justin, it was white.
+> So, we also need to evaluate the incremental effect 
+
+```{r}
+## Get the length of data, hue_range
+len <- dim(da)[2]
+
+## empty matrix that will get the frequency data
+avo_frequency <- as.matrix(0:49)
+
+for (i in colnames(da)){
+  if (i == "hue_index"){
+   }
+  else{
+   ##Do something
+   temp <- getIncre(as.matrix(da[[i]]))
+   temp <- as.matrix(temp)
+   ##get the increment
+   avo_frequency  <- cbind(avo_frequency ,temp)
+   ##start adding them
+  }
+}
+
+#now add column names
+d_avo <- data.frame(avo_frequency)
+colnames(d_avo) <- colnames(da)
+head(d_avo)
+```
+
+- Now, `d_avo_frequency` contains frequency of pixles whose color changed when `hue` was
+incremented by 1
+
+```{r}
+#convert wide to long extract data attribute 
+#and create new columns
+dff <-(melt(d_avo, id.vars=c("hue_index")))
+dff$block<- substring(dff$variable,0,1)
+dff$treatment <- substring(dff$variable,2,2)
+dff$id <- substring(dff$variable,3,4)
+d_avo_frequency <- dff[,c("block","treatment","id","hue_index","value")]
+```
+
+## TODO: NEED TO CONVERT TO DENSITY PLOT 
+
+> Color wise, N > J and B. [TODO]
+> `20` HUE indidate percent of avocado whose that became black when hue was changed 
+from 19 to 20.  (really bad)
+
+> `25` HUE indicate percent of avocado that turn black when hue was increased from
+24 to 25. (still good)
+
+> `30` HUE indicate percent of avocado that turn black when hue changed from 29 to 30.
+
+```{r}
+d_avo_frequency %>% ggplot(aes(x = hue_index, y = value, color=treatment)) + 
+  geom_point(aes(color = treatment)) + facet_wrap(~block,ncol = 1) + xlim(20,35)
+```
+
+> Is color good indicator?
+
+## Create avocado pdf
+
+```{r}
+#now df_avo cotains percent of pixles whose color changed when 
+head(d_avo)
+
+## empty matrix that will get the frequency data
+avo_pdf <- as.matrix(0:49)
+
+for (i in colnames(d_avo)){
+  if (i == "hue_index"){
+   }
+  else{
+   ##Do something
+   temp <- sum(d_avo[[i]])
+   temp <- d_avo[[i]]/temp
+   ##start adding them
+   avo_pdf   <- cbind(avo_pdf  ,temp)
+  }
+}
+
+#now add column names
+d_avo_pdf <- data.frame(avo_pdf)
+colnames(d_avo_pdf) <- colnames(da)
+head(d_avo_pdf)
+
+#convert wide to long extract data attribute 
+#and create new columns
+dff <-(melt(d_avo_pdf, id.vars=c("hue_index")))
+dff$block<- substring(dff$variable,0,1)
+dff$treatment <- substring(dff$variable,2,2)
+dff$id <- substring(dff$variable,3,4)
+d_avo_pdf_long <- dff[,c("block","treatment","id","hue_index","value")]
+head(d_avo_pdf_long)
+```
+
+# Create sample data based on the pdf
+
+> TODO Need to create function
+
+```{r}
+BT <- d_avo_pdf_long %>% filter(block=="B" & treatment =="t") %>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+BC <- d_avo_pdf_long %>% filter(block=="B" & treatment =="c")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE))
+
+NT <- d_avo_pdf_long %>% filter(block=="N" & treatment =="t")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+NC <- d_avo_pdf_long %>% filter(block=="N" & treatment =="c")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+JT <- d_avo_pdf_long %>% filter(block=="J" & treatment =="t")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+JC <- d_avo_pdf_long %>% filter(block=="J" & treatment =="c")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+#treatment
+s1 <- get_ind_data(BT)
+t1 <- data.frame(block="B", control = "treatment", value = s1)
+
+s2 <- get_ind_data(JT)
+t2 <- data.frame(block="J", control = "treatment", value = s2)
+
+s3 <- get_ind_data(NT)
+t3 <- data.frame(block="N", control = "treatment", value = s3)
+
+three_treats <- rbind(t1,t2,t3)
+
+#control
+s4 <- get_ind_data(BC)
+t4 <- data.frame(block="B", control = "control", value = s4)
+
+s5 <- get_ind_data(JC)
+t5 <- data.frame(block="J", control = "control", value = s5)
+
+s6 <- get_ind_data(NC)
+t6 <- data.frame(block="N", control = "control", value = s6)
+three_control <- rbind(t4,t5,t6)
+
+data <- rbind(three_treats,three_control)
+
+p1 <- data%>% ggplot(.,aes(x=value)) +
+           geom_density(aes(fill=control),adjust=1.5,alpha=0.3)  +
+           facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("Figure xx. Distribution of Avocao Hue") +
+        xlab("Hue") + ylab("Density")
+    
+
+p2 <- data %>% ggplot(.,aes(x=value, colour = control)) + stat_ecdf() +
+  facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("Figure xx. Distribution of Avocao Hue") +
+        xlab("Hue") + ylab("Density")
+
+p1 | p2
+```
+
+
+### Test based on the maximum distance between empirical distributions
+
+```{r}
+#control <- getIncre(df1)
+#treatment <- getIncre(df2)
+control <- BT$Mean
+treatment <- BC$Mean
+
+#sharp null distribution
+get_ks_permutation(BT$Mean,BC$Mean,5000)
+get_ks_permutation(JT$Mean,JC$Mean,5000)
+get_ks_permutation(NT$Mean,NC$Mean,5000)
+
+Z <- c(control,treatment)
+n <- length(control )
+m <- length(treatment)
+N <- length(Z)
+```
+
+
+## Measure 2
+
+> Abrupt change detection in HUE
+
+```{r}
+#raw data converted to long format
+head(d_avo_raw) 
+
+#arrange the data by block, treatement, id and hue_index
+d <- as.data.table(d_avo_raw)
+db <- d[order(rank(block), treatment, id,hue_index)]
+head(db)
+b_result <- data.frame(block = numeric(0),avocado_number= numeric(0),
+                       treatment = numeric(0),
+                       hue_turn = numeric(0) )
+#has 160 rows
+for (val in 1:36)
+{
+ start <- 1 + (val-1)*50
+ end <- (50*val)
+ #get the subject information
+ val_block   <- db[start,block]
+ val_subject <- db[start,id]
+ val_treat   <- db[start,treatment]
+ 
+ # # print(paste(start,":",end))
+ d_temp <- db[start:end,]
+ hue_turn <- getChangeHUE(d_temp)
+ b_result[val,] <- c(val_block,val_subject,val_treat,hue_turn)
+}
+
+b_result
+```
+
