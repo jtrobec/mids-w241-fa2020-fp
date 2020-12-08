@@ -117,7 +117,7 @@ get_ks_permutation <- function(control,treat,sim) {
   }
   
   # Visualising the permuted test statistics
-  hist(TT)
+  hist(TT,xlim = c(0,0.5))
   abline(v = maxD, lwd = 2, col = "green")
   box()
   
@@ -317,8 +317,8 @@ p1 <- data%>% ggplot(.,aes(x=value)) +
                   axis.ticks.x=element_blank(),
                   plot.title = element_text(hjust = 0.5)
                 ) +
-        ggtitle("Figure xx. Distribution of Avocao Hue") +
-        xlab("Hue") + ylab("Density")
+        ggtitle("emprical pdf") +
+        xlab("Hue") + ylab("Probability")
     
 
 p2 <- data %>% ggplot(.,aes(x=value, colour = control)) + stat_ecdf() +
@@ -330,8 +330,8 @@ p2 <- data %>% ggplot(.,aes(x=value, colour = control)) + stat_ecdf() +
                   axis.ticks.x=element_blank(),
                   plot.title = element_text(hjust = 0.5)
                 ) +
-        ggtitle("Figure xx. Distribution of Avocao Hue") +
-        xlab("Hue") + ylab("Density")
+        ggtitle("empirical cdf") +
+        xlab("Hue") + ylab("Probability")
 
 p1 | p2
 ```
@@ -346,10 +346,11 @@ control <- BT$Mean
 treatment <- BC$Mean
 
 #sharp null distribution
+par(mfrow=c(3,1))
 get_ks_permutation(BT$Mean,BC$Mean,5000)
 get_ks_permutation(JT$Mean,JC$Mean,5000)
 get_ks_permutation(NT$Mean,NC$Mean,5000)
-
+par(mfrow=c(1,1))
 Z <- c(control,treatment)
 n <- length(control )
 m <- length(treatment)
@@ -371,6 +372,47 @@ head(db)
 dim(db)/36
 ```
 
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+d_temp <- as.data.table(d_avo_raw)
+d_temp
+d <- d_temp %>% filter(hue_index > 18 & hue_index < 44) %>% 
+           filter (block == "B", id == 2 ) 
+db <- d[order(rank(block), treatment,id,hue_index)]
+
+d <- d_temp %>% filter(hue_index > 18 & hue_index < 44) %>% 
+           filter (block == "J", id == 11 ) 
+dj <- d[order(rank(block), treatment,id,hue_index)]
+
+
+tail(db)
+db
+p1 <- db %>% ggplot(.,aes(x=hue_index, y = value, colour = treatment)) + geom_line() +
+  facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("Block B treatment") +
+        xlab("Hue") + ylab("Probability")
+
+p2 <- dj %>% ggplot(.,aes(x=hue_index, y = value, colour = treatment)) + geom_line() +
+  facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("Block J treatment ") +
+        xlab("Hue") + ylab("Probability")
+
+p1/p2
+```
+
 
 ### Code for mannual confirmation
 
@@ -378,44 +420,60 @@ dim(db)/36
 d <- as.data.table(d_avo_raw)
 d <- d %>% filter(hue_index > 18 & hue_index < 44)
 db <- d[order(rank(block), treatment,id,hue_index)]
-head(db)
-dim(db)/36
-
+tail(db)
+# head(db)
+# dim(db)/36
+# dim(db)
+# unique(db$block)
 ## one by one debugging
-i = 4
-id <- i
-start <- id + (id-1)*24
-end <- id*25
-d_temp <- as.data.frame(db[start:end,])
-d_temp
-dg <- d_temp$value
+# i = 23
+# id <- i
+# start <- id + (id-1)*24
+# end <- id*25
+# d_temp <- as.data.frame(db[start:end,])
+# d_temp
+# dg <- d_temp$value
+# 
+# d_temp[1,"block"]
+# #abrupt change detection point
+# dg.amoc=cpt.mean(dg)
+# v = cpts(dg.amoc) 
+# par(mfrow=c(1,1))
+# plot(dg,xaxt='n')
+# abline(v=v,col="red")
 
-#abrupt change detection point
-dg.amoc=cpt.mean(dg)
-v = cpts(dg.amoc) 
-
-plot(dg,xaxt='n')
-abline(v=v,col="red")
 
 
-db[17*25,]
+
+b_result <- data.frame(block = numeric(0),avocado_number= numeric(0),
+                       treatment = numeric(0),
+                       hue_turn = numeric(0) )
+
+
 
 #hue index starts from 19
-par(mfrow=c(3,4))
-for (i in 1:35){
-  id <- i
-  start <- id + (id-1)*24
-  end <- id*25
+# par(mfrow=c(3,4))
+i = 1
+for (i in 1:36){
+  start <- i + (i-1)*24
+  end <- i*25
   d_temp <- as.data.frame(db[start:end,])
   dg <- d_temp$value
-  
+  block <- d_temp[1,"block"]
+  treatment <- d_temp[1,"treatment"]
+  id <- d_temp[1,"id"]
   #abrupt change detection point
   dg.amoc=cpt.mean(dg)
-  v = cpts(dg.amoc) 
+  v = cpts(dg.amoc)
   print(v)
+  abrupt <- v + 19
+  print(abrupt)
+  b_result[i,] <- c(block,id,treatment,abrupt)
   # plot(dg)
   # abline(v=v,col="red")
 }
+b_result
+
 # set.seed(1000)
 # bcp_x <- bcp(dg, return.mcmc = TRUE)
 # plot(bcp_x)
@@ -443,55 +501,55 @@ for (i in 1:35){
 # d <- as.data.table(d_avo_raw)
 # db <- d[order(rank(block), treatment, id,hue_index)]
 # head(db)
-
-d <- as.data.table(d_avo_raw)
-d <- d %>% filter(hue_index > 18 & hue_index < 44)
-db <- d[order(rank(block), treatment,id,hue_index)]
-
-b_result <- data.frame(block = numeric(0),avocado_number= numeric(0),
-                       treatment = numeric(0),
-                       hue_turn = numeric(0) )
-#has 160 rows
-for (val in 1:36)
-{
- #selected only upto min hue + 25
- start <- 1 + (val-1)*24
- end <- (25*val)
- #get the subject information
- val_block   <- db[start,block]
- val_subject <- db[start,id]
- val_treat   <- db[start,treatment]
- 
- # # print(paste(start,":",end))
- d_temp <- db[start:end,]
- #abrupt change detection point
- dg <- d_temp$value
- dg.amoc=cpt.mean(dg)
- #19 is the minimum number of Hue when the black ratio started to change
- hue_turn <- cpts(dg.amoc) 
- b_result[val,] <- c(val_block,val_subject,val_treat,hue_turn)
-}
-
-b_result
+# 
+# d <- as.data.table(d_avo_raw)
+# d <- d %>% filter(hue_index > 18 & hue_index < 44)
+# db <- d[order(rank(block), treatment,id,hue_index)]
+# 
+# b_result <- data.frame(block = numeric(0),avocado_number= numeric(0),
+#                        treatment = numeric(0),
+#                        hue_turn = numeric(0) )
+# #has 160 rows
+# for (val in 1:36)
+# {
+#  #selected only upto min hue + 25
+#  start <- 1 + (val-1)*24
+#  end <- (25*val)
+#  #get the subject information
+#  val_block   <- db[start,block]
+#  val_subject <- db[start,id]
+#  val_treat   <- db[start,treatment]
+#  
+#  # # print(paste(start,":",end))
+#  d_temp <- db[start:end,]
+#  #abrupt change detection point
+#  dg <- d_temp$value
+#  dg.amoc=cpt.mean(dg)
+#  #19 is the minimum number of Hue when the black ratio started to change
+#  hue_turn <- cpts(dg.amoc) 
+#  b_result[val,] <- c(val_block,val_subject,val_treat,hue_turn)
+# }
+# 
+# b_result
 ```
 
 ## Regression Estimator for Block Randomization
 
 > We have `3` blocks, `B`, `N`, and `J` with 12 samples in each block.
 
-$$Y_i = c + D + B + N + J$$
-
-TODO improve description
-where `c` and constant and `D`, `B`, `N`, and `J` are dummy varible with 1 and 0
-
 ```{r}
 b_result
-mod_b1 <- lm(hue_turn ~ as.factor(treatment) + as.factor(block), data = b_result)
-mod_b2 <- lm(hue_turn ~ as.factor(treatment)*as.factor(block), data = b_result)
+
+mod_b1 <- lm(hue_turn ~ as.factor(treatment) + as.factor(block),data = b_result)
+mod_b2 <- lm(hue_turn ~ as.factor(treatment)*as.factor(block),data = b_result)
+
 mod_b2
 coefficients(mod_b1)
-coeftest(mod_b1, vcov = vcovHC(mod_b, type = "HC1"))
+coeftest(mod_b1, vcov = vcovHC(mod_b1, type = "HC1"))
 coeftest(mod_b2, vcov = vcovHC(mod_b2, type = "HC1"))
+```
+```{r}
+stargazer(mod_b1, mod_b2, type = "text")
 ```
 
 > (see page 77 of Analysis of Categorical data) `anova()` from the `stat` package
@@ -499,7 +557,8 @@ performs type I test (i.e., sequentially adding the additional terms) while
 `Anova()` from `car` package performs type II test (i.e, )
 
 ```{r}
-Anova(mod_b2, test="Chisq")
+#anova(long_mod, short_mod, test = 'F')
+anova(mod_b2, mod_b1, test = 'F')
 ```
 
 
