@@ -31,7 +31,7 @@ getChangeDate <- function(df) {
   bcp_x <- bcp(dg, return.mcmc = TRUE)
   #plot(bcp_x)
   
-  bcp_sum <- as.data.frame(summary(bcp_x))
+  invisible(capture.output(bcp_sum <- as.data.frame(summary(bcp_x))))
   bcp_sum$id <- 1:length(dg)
   #selecting draft_number with posterior probabltiy greater than 0.2
   sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
@@ -56,33 +56,29 @@ names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity',
 
 ```
 
-- The following figure indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
+- Figure B1(a) indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
 blocks but fixed within blocks)
 
 - The individual fixed effect could have caused by how the picture was taken by
 different individuals and block fixed effect could have been the result of different
 enviromental condition (i.e., temperature of the house or humidity or lighting).
 
-- The individual and block fixed had been taken out in the following figure
+- The individual and block fixed had been taken out in Figure B1(b)
 
 ```{r}
 #remove the fixed effect
 d[,b_mu:=mean(black_ratio), by = .(block,banana_number)]
 d[,y := black_ratio - b_mu]
 
-d %>% ggplot(aes(x = day, y = black_ratio)) + 
-  geom_point(aes(color = treatment)) 
+p1 <- d %>% ggplot(aes(x = day, y = black_ratio)) + 
+  geom_point(aes(color = treatment)) + ggtitle("Figure B1(a)") +
+  xlab("Day") + ylab("Black Ratio") + theme(plot.title = element_text(hjust = 0.5))
 
-d %>% ggplot(aes(x = day, y = y)) + 
-  geom_point(aes(color = treatment)) 
+p2 <- d %>% ggplot(aes(x = day, y = y)) + 
+  geom_point(aes(color = treatment)) + ggtitle("Figure B1(b)") +
+  xlab("Day") + ylab("Black Ratio") + theme(plot.title = element_text(hjust = 0.5))
 
-
-
-#save the result of the detrended data
-
-db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
-
-write.csv(db,"db.csv")
+p1 / p2
 ```
 
 - The percent of `black-ratio` should be non-decreasing function of days, but
@@ -97,16 +93,17 @@ off-line abrupt change detection algorithm was employeed to detect changes in
 #included the detrended data 
 db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
 
+#save the result of the detrended data
+write.csv(db,"db.csv")
+
 ## change the format to process that data
 db[,b_name := paste0(block,banana_number)]
 db <- db[order(rank(b_name), y)]
-dim(db)
-head(db)
+
+## create empty data.frame to store d_turn
 b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
                        treatment = numeric(0),
                        d_turn = numeric(0) )
-
-write.csv(db,"db.csv")
 
 ```
 
@@ -116,23 +113,28 @@ write.csv(db,"db.csv")
 - The response is the day at which rapid deteroriation of banana condition was
 observed and the following figure shows there were detected 
 
-TODO: Need to figure out how to suppress the output
-
 ### Code for mannual confirmation
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r}
 #try 11 and 24 for demonstration
-id <- 24
+id <- 25
 start <- 1 + (id-1)*10
 end <- start + 9
 d_temp <- as.data.frame(db[start:end,])
 
 dg <- d_temp$y
+dg
 set.seed(1000)
 bcp_x <- bcp(dg, return.mcmc = TRUE)
-plot(bcp_x)
 
-bcp_sum <- as.data.frame(summary(bcp_x))
+plot(bcp_x,main="Figure B2",
+        xlab="days",
+        ylab="Black Ratio")
+```
+
+```{r}
+invisible(capture.output(bcp_sum <- as.data.frame(summary(bcp_x))))
+
 bcp_sum$id <- 1:length(dg)
 #selecting draft_number with posterior probabltiy greater than 0.2
 sel <- as.data.frame(bcp_sum[which(bcp_x$posterior.prob > 0.2), ])
@@ -148,8 +150,7 @@ time_of_change[1]
 ```{r}
 db[,b_name := paste0(block,banana_number)]
 db <- db[order(rank(b_name), y)]
-dim(db)
-head(db)
+
 b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
                        treatment = numeric(0),
                        d_turn = numeric(0) )
@@ -169,7 +170,7 @@ for (val in 1:24)
  b_result[val,] <- c(val_block,val_subject,val_treat,d_turn)
 }
 
-b_result
+# b_result
 ```
 
 # Analysis
@@ -225,22 +226,21 @@ for(i in 1:K){
 
 # Visualising the permuted test statistics
 par(bg = 'grey')
-hist(TT)
+hist(TT,main="Figure B3",
+        xlab="days",
+        ylab="Frequency")
 abline(v = b_mean , lwd = 2, col = "yellow")
 box()
 
 # approximate p-value
-mean(TT>b_mean )
+b_pvalue <- mean(TT>b_mean )
 ```
+
+> The p-value associated with the observed statistic is `r b_pvalue`.
 
 ## Regression Estimator for Block Randomization
 
 > We have `3` blocks, `B`, `N`, and `J` with 8 samples in each block.
-
-$$Y_i = c + D + B + N + J$$
-
-TODO improve description
-where `c` and constant and `D`, `B`, `N`, and `J` are dummy varible with 1 and 0
 
 ```{r}
 mod_b <- lm(d_turn ~ treatment + as.factor(block), data = b_result)
@@ -248,14 +248,15 @@ coeftest(mod_b, vcov = vcovHC(mod_b, type = "HC1"))
 ```
 
 ```{r}
-b_result
-b_result %>% ggplot(aes(x = d_turn, fill=treatment)) + geom_bar() +  facet_wrap(~block,ncol = 1)
+b_result %>% ggplot(aes(x = d_turn, fill=treatment)) + geom_bar() +  facet_wrap(~block,ncol = 1)+ ggtitle("Figure B4") +
+  xlab("Day") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
-db <- as.data.table(b_result)
-db
-b_result2 <- db[, .(round(mean(as.integer(d_turn))),0), by = .(block,treatment)][,1:3]
+temp <- as.data.table(b_result)
+
+b_result2 <- temp[, .(round(mean(as.integer(d_turn))),0), 
+                  by = .(block,treatment)][,1:3]
 print(b_result2)
 ```
 
