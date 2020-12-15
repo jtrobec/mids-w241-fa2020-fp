@@ -1,0 +1,574 @@
+---
+title: "Power_calc_banana"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+  
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(data.table)
+library(stargazer)
+library(dplyr)
+library(tidyverse)
+library(patchwork)
+library(sandwich)
+library(reshape2)
+library(lmtest)#coeftest()
+library(bcp)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+getChangeDate <- function(df) {
+  #this function is called after 
+  #the 'black_ratio' in the raw data has been
+  #coverted to `y` after taking the individual fixed effect into account
+  d_temp <- as.data.frame(df)
+  dg <- d_temp$y
+  set.seed(1000)
+  bcp_x <- bcp(dg, return.mcmc = TRUE)
+  #plot(bcp_x)
+  
+  invisible(capture.output(bcp_sum <- as.data.frame(summary(bcp_x))))
+  bcp_sum$id <- 1:length(dg)
+  #selecting draft_number with posterior probabltiy greater than 0.2
+  sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
+  #by this time all the bananas went bad
+  sel <- sel[sel$id <9,]
+  sel <- sel[which.max(sel$Probability),]
+  #get the id
+  time_of_change <- time(dg)[sel$id]
+  return(time_of_change[1])
+}
+```
+
+# Banana
+
+## Data Cleaning
+
+```{r}
+#data is given in a long format
+d <- fread('banana.csv',header=FALSE, sep=",")
+names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 
+              'temperature', 'black_ratio', 'weight')
+
+```
+
+- Figure B1(a) indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
+blocks but fixed within blocks)
+
+- The individual fixed effect could have caused by how the picture was taken by
+different individuals and block fixed effect could have been the result of different
+enviromental condition (i.e., temperature of the house or humidity or lighting).
+
+- The individual and block fixed had been taken out in Figure B1(b)
+
+```{r}
+#remove the fixed effect
+d[,b_mu:=mean(black_ratio), by = .(block,banana_number)]
+d[,y := black_ratio - b_mu]
+
+p1 <- d %>% ggplot(aes(x = day, y = black_ratio)) + 
+  geom_point(aes(color = treatment)) + ggtitle("Figure B1(a)") +
+  xlab("Day") + ylab("Black Ratio") + theme(plot.title = element_text(hjust = 0.5))
+
+p2 <- d %>% ggplot(aes(x = day, y = y)) + 
+  geom_point(aes(color = treatment)) + ggtitle("Figure B1(b)") +
+  xlab("Day") + ylab("Black Ratio") + theme(plot.title = element_text(hjust = 0.5))
+
+p1 / p2
+```
+
+- The percent of `black-ratio` should be non-decreasing function of days, but
+we have noticed that `black_ratio` can decrease when the tip of the banana withers
+which cause size of the banana cropped during the image processing part.
+
+- To account for such error introduced while measuring the `black_ratio`, one of 
+off-line abrupt change detection algorithm was employeed to detect changes in 
+`blac_ratio` while accounting for such small noise. 
+
+```{r}
+#included the detrended data 
+db <- d[,c('y','block', 'banana_number', 'treatment', 'day', 'humidity', 'temperature','black_ratio','weight')]
+
+#save the result of the detrended data
+write.csv(db,"db.csv")
+
+## change the format to process that data
+db[,b_name := paste0(block,banana_number)]
+db <- db[order(rank(b_name), y)]
+
+## create empty data.frame to store d_turn
+b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
+                       treatment = numeric(0),
+                       d_turn = numeric(0) )
+
+```
+
+
+## Estimate the treatment effect
+
+- The response is the day at which rapid deteroriation of banana condition was
+observed and the following figure shows there were detected 
+
+### Code for mannual confirmation
+
+```{r}
+#try 11 and 24 for demonstration
+id <- 25
+start <- 1 + (id-1)*10
+end <- start + 9
+d_temp <- as.data.frame(db[start:end,])
+
+dg <- d_temp$y
+dg
+set.seed(1000)
+bcp_x <- bcp(dg, return.mcmc = TRUE)
+
+plot(bcp_x,main="Figure B2",
+        xlab="days",
+        ylab="Black Ratio")
+```
+
+```{r}
+invisible(capture.output(bcp_sum <- as.data.frame(summary(bcp_x))))
+
+bcp_sum$id <- 1:length(dg)
+#selecting draft_number with posterior probabltiy greater than 0.2
+sel <- as.data.frame(bcp_sum[which(bcp_x$posterior.prob > 0.2), ])
+sel <- sel[sel$id <9,]
+sel <- sel[which.max(sel$Probability),]
+#get the id
+time_of_change <- time(dg)[sel$id]
+time_of_change[1]
+```
+
+### Get the data
+
+```{r}
+db[,b_name := paste0(block,banana_number)]
+db <- db[order(rank(b_name), y)]
+
+b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
+                       treatment = numeric(0),
+                       d_turn = numeric(0) )
+#has 160 rows
+for (val in 1:24)
+{
+ start <- 1 + (val-1)*10
+ end <- (10*val)
+ #get the subject information
+ val_block   <- db[start,block]
+ val_subject <- db[start,banana_number]
+ val_treat   <- db[start,treatment]
+ 
+ # # print(paste(start,":",end))
+ d_temp <- db[start:end,]
+ d_turn <- getChangeDate(d_temp)
+ b_result[val,] <- c(val_block,val_subject,val_treat,d_turn)
+}
+
+b_result
+```
+
+# Analysis
+
+> We have used block random assignement design.  
+> We have three blocks, `B`, `N`, and `J` and the probability of assignement
+to treatment, $p(d=1)=0.5$ for all three which allows us to later pool the data
+across the block and estimate ATE (page 76 FE)
+
+> We have selected block radomization to reduce sampling variablity (see page 72 FE).
+The subjects within the group are from the same brunch [LINK](https://kids.wng.org/node/3586)
+such that subjects in each block have similiar potential outcomes.  This also ensured
+that certain subgroups are available for seperate analysis (see page 71 FE)
+
+## Sharp null hypothesis
+
+> We began by testing sharp null hypothesis of no treatment effect
+
+> the treatment effect was measured by the day beyond which the black ratio
+rapidly increased. 
+
+```{r}
+#get control and treatment data
+b_control <- as.integer(b_result[b_result[,"treatment"] == "control","d_turn"])
+b_treatment <- as.integer(b_result[b_result[,"treatment"] == "treatment","d_turn"])
+
+#put them into a vector
+Z <- c(b_control,b_treatment)
+
+#get the length of each vectors
+n <- length(b_control)
+m <- length(b_treatment)
+N <- length(Z)
+
+# Number of permutations
+K = 10000
+
+# Test statistic
+getMean <- function(A,B) abs(mean(A) - mean(B))
+
+# Test statistic for the observed sample
+b_mean <- getMean(b_control,b_treatment)
+
+# Vector of test statistics for each permutation
+TT <- vector()
+
+# Permutation test
+for(i in 1:K){
+ #set.seed(i)
+ Z.pi <- sample(Z, N, replace = FALSE)
+ TT[i] <- getMean(Z.pi[1:n], Z.pi[(n+1):(n+m)])
+}
+
+# Visualising the permuted test statistics
+par(bg = 'grey')
+hist(TT,main="Figure B3",
+        xlab="days",
+        ylab="Frequency")
+abline(v = b_mean , lwd = 2, col = "yellow")
+box()
+
+# approximate p-value
+b_pvalue <- mean(TT>b_mean )
+```
+
+
+> The p-value associated with the observed statistic is `r b_pvalue`.
+
+## Regression Estimator for Block Randomization
+
+> We have `3` blocks, `B`, `N`, and `J` with 8 samples in each block.
+
+```{r}
+mod_b <- lm(d_turn ~ treatment + as.factor(block), data = b_result)
+coeftest(mod_b, vcov = vcovHC(mod_b, type = "HC1"))
+```
+
+```{r}
+b_result %>% ggplot(aes(x = d_turn, fill=treatment)) + geom_bar() +  facet_wrap(~block,ncol = 1)+ ggtitle("Figure B4") +
+  xlab("Day") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+temp <- as.data.table(b_result)
+
+b_result2 <- temp[, .(round(mean(as.integer(d_turn))),0), 
+                  by = .(block,treatment)][,1:3]
+print(b_result2)
+```
+
+
+### statistical power analysis for d_turn
+
+```{r}
+mean(b_control)
+```
+
+```{r}
+mean(b_treatment)
+```
+
+```{r}
+sd(b_control)
+```
+
+```{r}
+sd(b_treatment)
+```
+
+```{r}
+p_values <- NA 
+ri <- NA 
+d <- data.table()
+
+d[ , condition := rep(c('control', 'treatment'), each = 12)]
+
+for(power_loop in 1:100) { 
+  if(power_loop %% 10 == 0) cat(sprintf('Loop Number: %.0f\n', power_loop))
+  d[condition == 'control', Y := rnorm(.N, mean = mean(b_control), sd = sd(b_control))]
+  d[condition == 'treatment', Y := rnorm(.N, mean = mean(b_treatment), sd = sd(b_treatment))]
+  
+  ate <- d[ , mean(Y), keyby = condition][ , diff(V1)]
+  
+  for(ri_loop in 1:100) { 
+    ri[ri_loop] <- d[ , mean(Y), keyby = sample(condition)][ , diff(V1)]
+    }
+  
+  p_values[power_loop] <- mean(abs(ri) > abs(ate))
+  
+}
+
+hist(
+  x = p_values, 
+  col = 'black', 
+  main = 'Histogram of p-values', 
+  xlab = 'p-values')
+```
+
+```{r}
+mean(p_values < 0.05)
+```
+
+### Analysis
+
+The statistical power is 0.32, which is not large because our sample size is not large.
+
+
+### Statistical Power Calculation
+
+#### read the table
+```{r}
+#data is given in a long format
+d <- fread('banana.csv',header=FALSE, sep=",")
+names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity', 
+              'temperature', 'black_ratio', 'weight')
+
+```
+
+```{r}
+head(d)
+```
+
+## Weight
+
+### create `d_weight`
+
+```{r}
+d_weight <- d[day == 1 | day ==10, c('block', 'treatment', 'banana_number', 'day', 'weight')]
+d_weight
+```
+
+#### create `d_weight_tau`  and calculate the difference of weight between day 10 and day 1
+
+```{r}
+d_weight_tau <- d_weight[, .(difference = -diff(weight)), by = .(block, banana_number, treatment)]
+d_weight_tau
+```
+
+#### calculate mean and sd for control and treatment
+
+```{r}
+mean_weight_control <- d_weight_tau[treatment == 'control', mean(difference)]
+mean_weight_control
+```
+
+```{r}
+std_weight_control <- d_weight_tau[treatment == 'control', sd(difference)]
+std_weight_control
+```
+
+
+```{r}
+mean_weight_treatment <- d_weight_tau[treatment == 'treatment', mean(difference)]
+mean_weight_treatment
+```
+
+```{r}
+std_weight_treatment <- d_weight_tau[treatment == 'treatment', sd(difference)]
+std_weight_treatment
+```
+
+### power calculation
+
+```{r}
+power_test_t <- function(
+  mean_control = mean_weight_control, 
+  mean_treat = mean_weight_treatment, 
+  sd_control = std_weight_control, 
+  sd_treat = std_weight_treatment,
+  number_per_condition = 12, 
+  power_loops = 100, 
+  ri_loops = 100, 
+  verbose = TRUE) { 
+
+    p_values <- NA   
+    ri <- NA 
+    d <- data.table()
+  
+    d[ , condition := rep(c('control', 'treatment'), each = number_per_condition)]  
+  
+    for(power_loop in 1:power_loops) { 
+      if(verbose == TRUE) {
+        if(power_loop %% 10 == 0) {
+          cat(sprintf('Loop Number: %.0f\n', power_loop))
+        }
+      } 
+      
+      # d[condition == 'control',   Y := rnorm(.N, mean = mean_control, sd = sd_control)]
+      # d[condition == 'treatment', Y := rnorm(.N, mean = mean_treat, sd = sd_treat)]
+      # 
+      # ate <- d[ , mean(Y), keyby = condition][ , diff(V1)]
+      # 
+      # for(ri_loop in 1:ri_loops) { 
+      #   ri[ri_loop] <- d[ , mean(Y), keyby = sample(condition)][ , diff(V1)]
+      #   }
+      # 
+      # p_values[power_loop] <- mean(abs(ri) > abs(ate))
+      
+      p_values[power_loop] <- t.test(
+        x = rnorm(number_per_condition, mean = mean_control, sd = sd_control), 
+        y = rnorm(number_per_condition, mean = mean_treat, sd = sd_treat)
+      )$p.value
+    }
+      
+    return(list(
+      'p_values' = p_values, 
+      'power' = mean(p_values < 0.05)
+      ))
+}
+```
+
+```{r}
+power_test_t()$power
+```
+
+### Analysis
+
+Statistical power for weight is 0.28, which is not large because of our small sample size.
+
+
+## Black_ratio
+
+### create `d_black_ratio`
+
+```{r}
+d_black_ratio <- d[day == 1 | day ==10, c('block', 'treatment', 'banana_number', 'day', 'black_ratio')]
+head(d_black_ratio)
+```
+
+### create `d_black_ratio_tau`
+
+```{r}
+d_black_ratio_tau <- d_black_ratio[, .(difference = diff(black_ratio)), by = .(block, banana_number, treatment)]
+d_black_ratio_tau
+```
+
+#### calculate mean and standard deviation for control and treatment
+
+```{r}
+mean_black_ratio_control <- d_black_ratio_tau[treatment == 'control', mean(difference)]
+mean_black_ratio_control
+```
+
+
+```{r}
+std_black_ratio_control <- d_black_ratio_tau[treatment == 'control', sd(difference)]
+std_black_ratio_control
+```
+
+```{r}
+mean_black_ratio_treatment <- d_black_ratio_tau[treatment == 'treatment', mean(difference)]
+mean_black_ratio_treatment
+```
+
+```{r}
+std_black_ratio_treatment <- d_black_ratio_tau[treatment == 'treatment', sd(difference)]
+std_black_ratio_treatment
+```
+
+### calculate statistical power 
+
+```{r}
+power_test_t <- function(
+  mean_control = mean_black_ratio_control, 
+  mean_treat = mean_black_ratio_treatment, 
+  sd_control = std_black_ratio_control, 
+  sd_treat = std_black_ratio_treatment,
+  number_per_condition = 12, 
+  power_loops = 100, 
+  ri_loops = 100, 
+  verbose = TRUE) { 
+
+    p_values <- NA   
+    ri <- NA 
+    d <- data.table()
+  
+    d[ , condition := rep(c('control', 'treatment'), each = number_per_condition)]  
+  
+    for(power_loop in 1:power_loops) { 
+      if(verbose == TRUE) {
+        if(power_loop %% 10 == 0) {
+          cat(sprintf('Loop Number: %.0f\n', power_loop))
+        }
+      } 
+      
+      # d[condition == 'control',   Y := rnorm(.N, mean = mean_control, sd = sd_control)]
+      # d[condition == 'treatment', Y := rnorm(.N, mean = mean_treat, sd = sd_treat)]
+      # 
+      # ate <- d[ , mean(Y), keyby = condition][ , diff(V1)]
+      # 
+      # for(ri_loop in 1:ri_loops) { 
+      #   ri[ri_loop] <- d[ , mean(Y), keyby = sample(condition)][ , diff(V1)]
+      #   }
+      # 
+      # p_values[power_loop] <- mean(abs(ri) > abs(ate))
+      
+      p_values[power_loop] <- t.test(
+        x = rnorm(number_per_condition, mean = mean_control, sd = sd_control), 
+        y = rnorm(number_per_condition, mean = mean_treat, sd = sd_treat)
+      )$p.value
+    }
+      
+    return(list(
+      'p_values' = p_values, 
+      'power' = mean(p_values < 0.05)
+      ))
+}
+```
+
+
+```{r}
+power_test_t()$power
+```
+
+**result**
+
+Statistical power for weight is 0.51, which is not small although our sample size is small.
+
+
+
+## Simple regression for weight
+
+```{r}
+mod_weight <- d_weight_tau[, lm(difference ~ treatment + as.factor(block))]
+summary(mod_weight)
+```
+
+### cohen's d
+
+```{r}
+library('effsize')
+```
+
+```{r}
+d_weight_tau[, cohen.d(-difference, treatment)]
+```
+
+**result**
+
+From the regression, treatment effect is 1.973g with a p-value of 0.158, which is not statistically significant. When we calculated cohen's d, it's 0.346.
+
+
+
+
+## simple regression for black_ratio
+
+```{r}
+mod_black_ratio <- d_black_ratio_tau[, lm(difference ~ treatment + as.factor(block))]
+summary(mod_black_ratio)
+
+```
+
+```{r}
+d_black_ratio_tau[, cohen.d(difference ~ treatment)]
+```
+
+**result**
+
+From the regression treatment estimate is -0.04 with a p-value of 0.019, which is statistically significant. When we calculated cohen's d, it's 0.856. We can say it's practically significant.
+
