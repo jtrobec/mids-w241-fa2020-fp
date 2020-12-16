@@ -57,7 +57,7 @@ We summarize the control group and treatment group for each fruit.
 ## Structure of This Repo
 <a name='structure_of_this_repo' />
 
-```bash
+```
 ├───data (contains raw images we gathered during the experiments)
 │   ├───B
 │   │   ├───experiment1
