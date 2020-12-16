@@ -57,14 +57,6 @@ names(d) <- c('block', 'banana_number', 'treatment', 'day', 'humidity',
 
 ```
 
-- Figure B1(a) indicates there exists both individual fixed effect (i.e., value that varies among differnt subjects, but fixed over time) and block effect (i.e., value that varies between
-blocks but fixed within blocks)
-
-- The individual fixed effect could have caused by how the picture was taken by
-different individuals and block fixed effect could have been the result of different
-enviromental condition (i.e., temperature of the house or humidity or lighting).
-
-- The individual and block fixed had been taken out in Figure B1(b)
 
 ```{r}
 #remove the fixed effect
@@ -79,16 +71,9 @@ p2 <- d %>% ggplot(aes(x = day, y = y)) +
   geom_point(aes(color = treatment)) + ggtitle("Figure B1(b)") +
   xlab("Day") + ylab("Black Ratio") + theme(plot.title = element_text(hjust = 0.5))
 
-p1 / p2
+#p1 / p2
 ```
 
-- The percent of `black-ratio` should be non-decreasing function of days, but
-we have noticed that `black_ratio` can decrease when the tip of the banana withers
-which cause size of the banana cropped during the image processing part.
-
-- To account for such error introduced while measuring the `black_ratio`, one of 
-off-line abrupt change detection algorithm was employeed to detect changes in 
-`blac_ratio` while accounting for such small noise. 
 
 ```{r}
 #included the detrended data 
@@ -111,9 +96,6 @@ b_result <- data.frame(block = numeric(0),banana_number= numeric(0),
 
 ## Estimate the treatment effect
 
-- The response is the day at which rapid deteroriation of banana condition was
-observed and the following figure shows there were detected 
-
 ### Code for mannual confirmation
 
 ```{r}
@@ -128,9 +110,9 @@ dg
 set.seed(1000)
 bcp_x <- bcp(dg, return.mcmc = TRUE)
 
-plot(bcp_x,main="Figure B2",
-        xlab="days",
-        ylab="Black Ratio")
+#plot(bcp_x,main="Figure B2",
+#        xlab="days",
+#        ylab="Black Ratio")
 ```
 
 ```{r}
@@ -171,27 +153,11 @@ for (val in 1:24)
  b_result[val,] <- c(val_block,val_subject,val_treat,d_turn)
 }
 
-b_result
+#b_result
 ```
 
 # Analysis
 
-> We have used block random assignement design.  
-> We have three blocks, `B`, `N`, and `J` and the probability of assignement
-to treatment, $p(d=1)=0.5$ for all three which allows us to later pool the data
-across the block and estimate ATE (page 76 FE)
-
-> We have selected block radomization to reduce sampling variablity (see page 72 FE).
-The subjects within the group are from the same brunch [LINK](https://kids.wng.org/node/3586)
-such that subjects in each block have similiar potential outcomes.  This also ensured
-that certain subgroups are available for seperate analysis (see page 71 FE)
-
-## Sharp null hypothesis
-
-> We began by testing sharp null hypothesis of no treatment effect
-
-> the treatment effect was measured by the day beyond which the black ratio
-rapidly increased. 
 
 ```{r}
 #get control and treatment data
@@ -235,31 +201,6 @@ box()
 
 # approximate p-value
 b_pvalue <- mean(TT>b_mean )
-```
-
-
-> The p-value associated with the observed statistic is `r b_pvalue`.
-
-## Regression Estimator for Block Randomization
-
-> We have `3` blocks, `B`, `N`, and `J` with 8 samples in each block.
-
-```{r}
-mod_b <- lm(d_turn ~ treatment + as.factor(block), data = b_result)
-coeftest(mod_b, vcov = vcovHC(mod_b, type = "HC1"))
-```
-
-```{r}
-b_result %>% ggplot(aes(x = d_turn, fill=treatment)) + geom_bar() +  facet_wrap(~block,ncol = 1)+ ggtitle("Figure B4") +
-  xlab("Day") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
-```
-
-```{r}
-temp <- as.data.table(b_result)
-
-b_result2 <- temp[, .(round(mean(as.integer(d_turn))),0), 
-                  by = .(block,treatment)][,1:3]
-print(b_result2)
 ```
 
 
@@ -316,10 +257,10 @@ mean(p_values < 0.05)
 
 ### Analysis
 
-The statistical power is 0.32, which is not large because our sample size is not large.
+> The statistical power is 0.32, which is not large because our sample size is not large.
 
 
-### Statistical Power Calculation
+### Statistical Power Calculation for weight and black_ratio
 
 #### read the table
 ```{r}
@@ -429,7 +370,7 @@ power_test_t()$power
 
 ### Analysis
 
-Statistical power for weight is 0.28, which is not large because of our small sample size.
+> Statistical power for weight is 0.28, which is not large because of our small sample size.
 
 
 ## Black_ratio
@@ -536,7 +477,8 @@ Statistical power for weight is 0.51, which is not small although our sample siz
 
 ```{r}
 mod_weight <- d_weight_tau[, lm(difference ~ treatment + as.factor(block))]
-summary(mod_weight)
+mod_weight$vcovHC_ <- vcovHC(mod_weight)
+coeftest(mod_weight, vcov. = mod_weight$vcovHC_)
 ```
 
 ### cohen's d
@@ -549,9 +491,9 @@ library('effsize')
 d_weight_tau[, cohen.d(-difference, treatment)]
 ```
 
-**result**
+### Analysis
 
-From the regression, treatment effect is 1.973g with a p-value of 0.158, which is not statistically significant. When we calculated cohen's d, it's 0.346.
+> From the regression, treatment effect is 1.973g with a p-value of 0.206, which is not statistically significant. When we calculated cohen's d, it's 0.346. Therefore, we concluded that the treatment effect for weight is not pratically significant.
 
 
 
@@ -560,15 +502,15 @@ From the regression, treatment effect is 1.973g with a p-value of 0.158, which i
 
 ```{r}
 mod_black_ratio <- d_black_ratio_tau[, lm(difference ~ treatment + as.factor(block))]
-summary(mod_black_ratio)
-
+mod_black_ratio$vcovHC_ <- vcovHC(mod_black_ratio)
+coeftest(mod_black_ratio, vcov. = mod_black_ratio$vcovHC_)
 ```
 
 ```{r}
 d_black_ratio_tau[, cohen.d(difference ~ treatment)]
 ```
 
-**result**
+### Analysis
 
-From the regression treatment estimate is -0.04 with a p-value of 0.019, which is statistically significant. When we calculated cohen's d, it's 0.856. We can say it's practically significant.
+> From the regression treatment estimate is -0.04 with a p-value of 0.031, which is statistically significant. When we calculated cohen's d, it's 0.856. We can say it's practically significant.
 
