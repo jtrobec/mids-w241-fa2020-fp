@@ -5,15 +5,16 @@ Quantifying the treatment effects on prolonging the freshness of apples, bananas
 
 ### Table of Contents
 
-* Introduction
-* Experiment Design
-* Analysis
-* Conclusions
-* Structure of This Repo
-* Reproducing our Results
-* Links and References
+* [Introduction](#introduction)
+* [Experiment Design](#experiment_design)
+* [Analysis](#analysis)
+* [Conclusions](#conclusions)
+* [Structure of This Repo](#structure_of_this_repo)
+* [Reproducing our Results](#reproducing_our_results)
+* [Links and References](#links_and_references)
 
 ## Introduction
+<a name='introduction' />
 
 Reducing food waste is a global problem. United Nations set 17 sustainable development goals in 2015 and the goal No 12 is "Responsible consumption and production [1] [THE 17 GOALS | Sustainable Development](https://sdgs.un.org/goals). According to United Nations, 13.8% of food is lost in the supply chains in 2016. [2] [Goal 12 | Department of Economic and Social Affairs](https://sdgs.un.org/goals/goal12) Therefore, we can say that finding a good way to keep the food fresh for a long time is important for our lives.
 There are many startups that tackle this global problem. A startup in the East Coast tries to find out the best timing to eat apples by measuring the ethylene gas. [3] [Strella Biotechnology – Fighting Food Waste](https://www.strellabiotech.com/) This startup has already raised $3.8M as of December 2020. [4] [Strella Biotechnology - Crunchbase Company Profile & Funding](https://www.crunchbase.com/organization/strella-biotechnology)Another startup in the West Coast developed special coating technology which adds a layer of tasteless, odorless, plant-based protection on the surface of fruits and vegetables to keep them fresh for a long time.  [5] [Apeel | Food Gone Good](https://www.apeel.com/)This startup has raised $390M as of December 2020. [6] [Apeel Sciences - Crunchbase Company Profile & Funding](https://www.crunchbase.com/organization/apeel-sciences) These startups show that reducing food waste has a big business impact.
@@ -45,7 +46,23 @@ We summarize the control group and treatment group for each fruit.
 	* Treatment: we left treatment apples upside up for 25 days.
     
     
-    
+## Experiment Design
+<a name='experiment_design' />
+
+## Analysis
+<a name='analysis' />
+
+## Conclusions
+<a name='conclusions' />
+
+## Structure of This Repo
+<a name='structure_of_this_repo' />
+
+## Reproducing our Results
+<a name='reproducing_our_results' />
+
+## Links and References
+<a name='links_and_references' />
     
     
     
