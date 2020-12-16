@@ -57,11 +57,28 @@ We summarize the control group and treatment group for each fruit.
 ## Structure of This Repo
 <a name='structure_of_this_repo' />
 
-+root
-|+data      (contains raw images we gathered during the experiments.
-|+src       (contains source code and notebooks we used for processing and analysis)
-|+media     (contains images and media we used for reports and presentations)
-|README.md  (this file; an explanation of our experiment and results)
+```bash
+├───data (contains raw images we gathered during the experiments)
+│   ├───B
+│   │   ├───experiment1
+│   │   ├───experiment2
+│   │   ├───experiment3
+│   │   └───experiment4
+│   ├───J
+│   │   ├───experiment1
+│   │   ├───experiment2
+│   │   └───experiment3
+│   └───N
+│       ├───experiment1
+│       ├───experiment3
+│       └───experiment4
+├───media (contains images and media we used for reports and presentations)
+└───src (contains source code and notebooks we used for processing and analysis)
+    ├───notebooks
+    ├───python
+    └───R     
+├───README.md  (this file; an explanation of our experiment and results)
+```
 
 ## Reproducing our Results
 <a name='reproducing_our_results' />
