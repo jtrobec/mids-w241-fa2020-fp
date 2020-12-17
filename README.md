@@ -20,8 +20,7 @@ Reducing food waste is a global problem. United Nations set 17 sustainable devel
 There are many startups that tackle this global problem. A startup in the East Coast tries to find out the best timing to eat apples by measuring the ethylene gas [3](#ref3). This startup has already raised $3.8M as of December 2020 [4](#ref4). Another startup in the West Coast developed special coating technology which adds a layer of tasteless, odorless, plant-based protection on the surface of fruits and vegetables to keep them fresh for a long time [5](#ref5). This startup has raised $390M as of December 2020 [6](#ref6). These startups show that reducing food waste has a big business impact.
 Moreover, several companies developed special containers which can keep the freshness of the food. Although those startups try to implement very complex methods, we can do something in much simpler way. Especially, people like very simple way to store foods in their home because they do not want to pay a lot of money for this problem and they do not want to continue complicated habits.
     
-## Experiment Design
-<a name='experiment_design' />
+## Experiment Design <a name='experiment_design' />
 
 ### Objective and hypothesis of the experiment
 The objective of our experiment is to evaluate the average treatment effect of different fruit storage methods in prolonging the freshness of fruits. Our hypothesis is that even when we stored fruits at a room temperature, how they are stored can affect the longevity of their freshness. We came up with several simple fruit storage methods for this project, and ran multiple experiments with a variety of fruits to evaluate them.
@@ -48,7 +47,7 @@ Randomization is very simple: after we purchase the fruit, each item is given an
 
 We found no indicators that would lead us to believe randomization was faulty. For example, if we look at the covariate ‘weight’ prior to experimentation, we see similar distributions.
 
-Experiment power calculations are performed in the (power_avocado.Rmd)[src/R/power_avocado.Rmd] and (power_banana.Rmd)[src/R/power_banana.Rmd] files.
+Experiment power calculations are performed in the [power_avocado.Rmd](src/R/power_avocado.Rmd) and [power_banana.Rmd](src/R/power_banana.Rmd) files.
 
 ## Analysis <a name='analysis' />
 
@@ -56,7 +55,7 @@ For each experiment, we did analysis in two parts. The first part involved conve
 
 Our results did reveal some significance in different avocado blocks between treatment and control. However, we observed that in treatment, the block using plastic bags were still inedible inspite of insignificant darkening. They had become mushy and grown mold on the outside.
 
-Please see the [banana](Data_cleaning_banana.pdf) and [avocado](Data_cleaning_avocado.pdf) documents for a walkthrough of the analysis and detailed results.
+Please see the [banana](Data_cleaning_Banana.pdf) and [avocado](Data_cleaning_Avocado.pdf) documents for a walkthrough of the analysis and detailed results.
 
 ## Conclusions <a name='conclusions' />
 
