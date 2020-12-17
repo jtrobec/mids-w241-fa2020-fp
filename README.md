@@ -50,6 +50,9 @@ We found no indicators that would lead us to believe randomization was faulty. F
 
 ## Analysis
 <a name='analysis' />
+For each experiment, we did analysis in two parts. The first part involved converting images into Hue/Value/Saturation format, and varying the hue while other values stayed fixed. This allowed us to separate out light and dark parts of the fruits. We evaluated this separation in two ways. For bananas, we watched how the area of darkness changed over time. We called the day that it turned more dark the measure d_turn. For avocados, since we only took one image, we called the hue at which the percentage of black in the image abruptly increased the hue turn. We used change detection algorithms (CUMSUM and BCP) to identify these points.
+
+Our results did reveal some significance in different avocado blocks between treatment and control. However, we observed that in treatment, the block using plastic bags were still inedible inspite of insignificant darkening. They had become mushy and grown mold on the outside.
 
 ## Conclusions
 <a name='conclusions' />
@@ -87,10 +90,12 @@ We found no indicators that would lead us to believe randomization was faulty. F
 
 ## Reproducing our Results
 <a name='reproducing_our_results' />
+The `data` folder contains all the images we took for the experiments, along with csv files containing the covariates we recorded. We used pieces of 8 1/2x11 paper divided into quarters to keep our subjects organized, each square labeled with the subject ID. The more consistent one can make the picture taking process, the easier we believe subsequent analysis will be.
+
+For the avocado experiment, the [process_avocados.py](https://github.com/jtrobec/mids-w241-fa2020-fp/blob/main/src/python/process_avocados.py) file can be modified to process new avocado images. The subject names and paths in lines 12-18 must be updated to point to the new images, but once that is done simply executing the script using `python process_avocados.py` will generate the table of blackness percentages at varying hues. The [Data_cleaning_avocado.Rmd](https://github.com/jtrobec/mids-w241-fa2020-fp/blob/main/src/R/Data_cleaning_Avocado.Rmd) file can use the resulting CSV and run our analysis to calculate hue_turn and significance using the KS test.
 
 ## Links and References
 <a name='links_and_references' />
-
 
 1. [THE 17 GOALS | Sustainable Development](https://sdgs.un.org/goals) <a name='ref1' />
 2. [Goal 12 | Department of Economic and Social Affairs](https://sdgs.un.org/goals/goal12) <a name='ref2' />  
