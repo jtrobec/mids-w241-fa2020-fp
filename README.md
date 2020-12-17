@@ -93,19 +93,9 @@ We found no indicators that would lead us to believe randomization was faulty. F
 
 
 1. [THE 17 GOALS | Sustainable Development](https://sdgs.un.org/goals) <a name='ref1' />
-2. [Goal 12 | Department of Economic and Social Affairs](https://sdgs.un.org/goals/goal12) <a name='ref2' />
-
-<a name='ref3' />    
-3. [Strella Biotechnology – Fighting Food Waste](https://www.strellabiotech.com/)
-
-<a name='ref4' />
-4. [Strella Biotechnology - Crunchbase Company Profile & Funding](https://www.crunchbase.com/organization/strella-biotechnology)
-
-<a name='ref5' />
-5. [Apeel | Food Gone Good](https://www.apeel.com/)
-
-<a name='ref6' />
-6. [Apeel Sciences - Crunchbase Company Profile & Funding](https://www.crunchbase.com/organization/apeel-sciences)
-
-<a name='ref7' />
-7. [Fruit storage disorders](https://extension.umaine.edu/fruit/harvest-and-storage-of-tree-fruits/storage-disorders/)
+2. [Goal 12 | Department of Economic and Social Affairs](https://sdgs.un.org/goals/goal12) <a name='ref2' />  
+3. [Strella Biotechnology – Fighting Food Waste](https://www.strellabiotech.com/) <a name='ref3' />  
+4. [Strella Biotechnology - Crunchbase Company Profile & Funding](https://www.crunchbase.com/organization/strella-biotechnology) <a name='ref4' />
+5. [Apeel | Food Gone Good](https://www.apeel.com/) <a name='ref5' />
+6. [Apeel Sciences - Crunchbase Company Profile & Funding](https://www.crunchbase.com/organization/apeel-sciences) <a name='ref6' />
+7. [Fruit storage disorders](https://extension.umaine.edu/fruit/harvest-and-storage-of-tree-fruits/storage-disorders/) <a name='ref7' />
