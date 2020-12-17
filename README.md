@@ -15,7 +15,6 @@ Quantifying the treatment effects on prolonging the freshness of apples, bananas
 
 ## Introduction
 <a name='introduction' />
-
 Reducing food waste is a global problem. United Nations set 17 sustainable development goals in 2015 and the goal No 12 is "Responsible consumption and production [1](#ref1). According to United Nations, 13.8% of food is lost in the supply chains in 2016 [2](#ref2). Therefore, we can say that finding a good way to keep the food fresh for a long time is important for our lives.
 
 There are many startups that tackle this global problem. A startup in the East Coast tries to find out the best timing to eat apples by measuring the ethylene gas [3](#ref3). This startup has already raised $3.8M as of December 2020 [4](#ref4). Another startup in the West Coast developed special coating technology which adds a layer of tasteless, odorless, plant-based protection on the surface of fruits and vegetables to keep them fresh for a long time [5](#ref5). This startup has raised $390M as of December 2020 [6](#ref6). These startups show that reducing food waste has a big business impact.
@@ -25,8 +24,7 @@ Moreover, several companies developed special containers which can keep the fres
 <a name='experiment_design' />
 
 ### Objective and hypothesis of the experiment
-The objective of our experiment is to evaluate the average treatment effect of different fruit storage methods in prolonging the freshness of fruits.  
-Our hypothesis is that even when we stored fruits at a room temperature, how they are stored can affect the longevity of their freshness. We came up with several simple fruit storage methods for this project, and ran multiple experiments with a variety of fruits to evaluate them.
+The objective of our experiment is to evaluate the average treatment effect of different fruit storage methods in prolonging the freshness of fruits. Our hypothesis is that even when we stored fruits at a room temperature, how they are stored can affect the longevity of their freshness. We came up with several simple fruit storage methods for this project, and ran multiple experiments with a variety of fruits to evaluate them.
 
 ### Measuring the freshness of fruit
 Ideally we would have a simple device and metric that would allow us to evaluate the freshness of a given piece of fruit. Unfortunately, freshness is more of an objective, multidimensional concept. In order to operationalize freshness, we focused on the appearance of visible blemishes on the skin of the fruit under experiment. This was for two reasons: first, we found that many of the common issues with fruit storage manifested in such dark blemishes [7](#ref7); and second, there is much evidence that consumers and buyers are extrememly sensitive to visible blemishes, and will often reject fruit based on its appearance.
@@ -55,6 +53,11 @@ We found no indicators that would lead us to believe randomization was faulty. F
 
 ## Conclusions
 <a name='conclusions' />
+
+* A single value response may not be able to capture the treatment effect that you wish to capture.
+* Rather than using a scalar value, using a vector or hyperplane can a solution.
+* When you buy avocado, wrapping in a paper bag or foil can help. Don’t put them inside a plastic bag
+* When you buy apple, you can leave it at room temperature for a long time.
 
 ## Structure of This Repo
 <a name='structure_of_this_repo' />
@@ -108,61 +111,3 @@ We found no indicators that would lead us to believe randomization was faulty. F
 
 <a name='ref7' />
 7. [Fruit storage disorders](https://extension.umaine.edu/fruit/harvest-and-storage-of-tree-fruits/storage-disorders/)
-
-
-
-----------------------------    
-# Summary of meeting with Professor Hughes
-
-- Advice. Make sure we talk about how the procedure can be used to measure for cancer spread. Other spatioal changes with respect to initial condition in the 
-report and during the presentation.
-
-## Changing experiment subject from apples to other fruits
-
-### 1.	Avocado: random assignment
-- 	`Control`: leave it is
-- 	`Treatments`: Plastic bag, paper bag and plastic wrap
-    - paper bag, T1
-    - plastic bag, T2
-    - plastic wrap, T3
--   Evaluate which treatment was more effective than the other.  See Problem set 4 part 5.4
--  Cut avocado 10 days later.
-    - Take picture and develop cdf.  green to brown scale on the x-axis, and y ranges from 0 to 1. 
-    - [LINK](https://www.schemecolor.com/green-with-brown-color-combination.php)
-- Mad cow [LINK](https://www.mayoclinic.org/diseases-conditions/creutzfeldt-jakob-disease/diagnosis-treatment/drc-20371230#:~:text=Only%20a%20brain%20biopsy%20or,presence%20of%20Creutzfeldt%2DJakob%20disease.)
-- **need to develop the computer vision system without knowing if the object is assigned to any group.**
-
-### Banana: random assignment
--	`Control`: leave it as it is
--	`Treatments`: leave apple next it to see if leaving apple next it makes the bananas go bad sooner
--    Add anchor points in the paper during the observation in order to detect the center of the objects. 
-
-### Apple: random assignment
-- `Control`: upside up
-- `Treatments`: upside up with banana
-- Evaluate if the effect of leaving banana next to apple
--    Add anchor point in the paper during the observation. 
-
-
-
-
-
-
-
-
-
-
-# MIDS W241 Final Project
-### Experiment Process
-
-#### Setup
-- Buy organic apples (Fuji), 1 box (
-- Draw a 5cm x 5cm box on a piece of paper.
-- Write the apple's information 
-  - day you're starting the experiment
-  - apple ID
-- Place the apple on the paper, leave in the same place over course of the experiment
-- When you take a measurement:
-  - draw a tick (do NOT touch apple!)
-  - write down the temperature, humidity
-  - take a picture (using camera phone)
