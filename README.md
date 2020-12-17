@@ -13,8 +13,8 @@ Quantifying the treatment effects on prolonging the freshness of apples, bananas
 * [Reproducing our Results](#reproducing_our_results)
 * [Links and References](#links_and_references)
 
-## Introduction
-<a name='introduction' />
+## Introduction <a name='introduction' />
+
 Reducing food waste is a global problem. United Nations set 17 sustainable development goals in 2015 and the goal No 12 is "Responsible consumption and production [1](#ref1). According to United Nations, 13.8% of food is lost in the supply chains in 2016 [2](#ref2). Therefore, we can say that finding a good way to keep the food fresh for a long time is important for our lives.
 
 There are many startups that tackle this global problem. A startup in the East Coast tries to find out the best timing to eat apples by measuring the ethylene gas [3](#ref3). This startup has already raised $3.8M as of December 2020 [4](#ref4). Another startup in the West Coast developed special coating technology which adds a layer of tasteless, odorless, plant-based protection on the surface of fruits and vegetables to keep them fresh for a long time [5](#ref5). This startup has raised $390M as of December 2020 [6](#ref6). These startups show that reducing food waste has a big business impact.
