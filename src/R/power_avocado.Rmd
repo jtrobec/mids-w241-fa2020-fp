@@ -1,0 +1,629 @@
+---
+title: "power_avocado"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(data.table)
+library(stargazer)
+library(dplyr)
+library(tidyverse)
+library(patchwork)
+library(sandwich)
+library(reshape2)
+library(car)
+library(lmtest)#coeftest()
+library(bcp)
+library(changepoint)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+getChangeHUE <- function(df) {
+  #this function is called after 
+  d_temp <- as.data.frame(df)
+  #this is the perent of hue information is stored
+  dg <- d_temp$value
+  set.seed(1000)
+  bcp_x <- bcp(dg, return.mcmc = TRUE)
+  #plot(bcp_x)
+  
+  bcp_sum <- as.data.frame(summary(bcp_x))
+  bcp_sum$id <- 1:length(dg)
+  #selecting draft_number with posterior probabltiy greater than 0.2
+  sel <- bcp_sum[which(bcp_x$posterior.prob > 0.2), ]
+  #by this time all the bananas went bad
+  sel <- sel[sel$id <49,]
+  sel <- sel[which.max(sel$Probability),]
+  #get the id
+  time_of_change <- time(dg)[sel$id]
+  return(time_of_change[1])
+}
+
+getIncre <- function(df) {
+  #takes avocado cumuluative hue value
+  #returns frequency for each value of hue
+  #which will be used to create sample data
+  max <- max(df)
+  min <- min(df)
+  diff <- max-min
+  
+  hue_index <- 0:49
+  len <- dim(df)[1]
+  H_vector <- vector()
+  
+  for(i in 1:len){
+     #set.seed(i)
+     if (i == 1){
+        #initial value is 0, the reference point
+        H_vector[1] <- 0
+     }
+     else{
+     #H_vector[i] <- (df[i]-df[i-1])*100
+     H_vector[i] <- (df[i]-df[i-1])
+     }
+  }
+  result <- H_vector
+  #result1 <- cbind(hue_index,H_vector)
+  #result <- get_ind_data(result1)
+  return(result)
+}
+
+#create sample data based on pdf
+get_ind_data <- function(df) {
+ sample <- vector()
+ len <- dim(df)[1]
+ for(i in 1:len){
+    add_it <- rep(df[i,1][[1]],round(df[i,2][[1]],2)*100)
+    sample <- c(sample,add_it)
+ }
+return(sample)
+}
+
+
+#################################################
+get_ks_permutation <- function(control,treat,sim) {
+  #control is sample data for control
+  #treat is the sampe data for treat,
+  control <- control
+  treatment <- treat
+  
+  Z <- c(control,treatment)
+  n <- length(control )
+  m <- length(treatment)
+  N <- length(Z)
+  
+  # Number of permutations
+  K = sim
+
+  # Test statistic
+  getD <- function(A,B) ks.test(A,B)$statistic
+  
+  # Test statistic for the observed sample
+  maxD <- getD(control,treatment)
+  maxD
+  # Vector of test statistics for each permutation
+  TT <- vector()
+  
+  # Permutation test
+  for(i in 1:K){
+    set.seed(i)
+    Z.pi <- sample(Z, N, replace = FALSE)
+    TT[i] <- getD(Z.pi[1:n], Z.pi[(n+1):(n+m)])
+  }
+  
+  # Visualising the permuted test statistics
+  hist(TT,xlim = c(0,0.5))
+  abline(v = maxD, lwd = 2, col = "green")
+  box()
+  
+  mean(TT>maxD)
+}
+
+```
+
+
+# AVOCADO
+
+## Block and randomization experimental design. 
+
+- Three blocks and 12 subjects each
+
+```{r warning=FALSE}
+## Read and format data
+da <- fread('avocado_blackness.csv')
+#convert wide to long extract data attribute 
+#and create new columns
+df <-(melt(da, id.vars=c("hue_index")))
+df$block<- substring(df$variable,0,1)
+df$treatment <- substring(df$variable,2,2)
+df$id <- substring(df$variable,3,4)
+d_avo_raw <- df[,c("block","treatment","id","hue_index","value")]
+```
+
+- Figure A1 shows empirical cumulative distribution of black ratio as function of hue
+- Figure A1 shows suggests that there exist both fixed effect for block and individual level.
+  - Having differnt background when taking picture of avocado or differences in 
+  lighting could have caused the fixed effect. 
+
+```{r, warning=FALSE, fig.cap="Cumulative distribution of black ratio"}
+d_avo_raw %>% ggplot(aes(x = hue_index, y = value, color=treatment)) + 
+  geom_point(aes(color = treatment)) + facet_wrap(~block,ncol = 1) + 
+  xlim(20,35) + 
+  xlab("Hue") + ylab("Black Ratio") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Get individual hue count data
+
+> The higher the value of hue, the stronger the filter effect.  For an example,
+
+```{r}
+## Get the length of data, hue_range
+len <- dim(da)[2]
+
+## empty matrix that will get the frequency data
+avo_frequency <- as.matrix(0:49)
+
+for (i in colnames(da)){
+  if (i == "hue_index"){
+   }
+  else{
+   ##Do something
+   temp <- getIncre(as.matrix(da[[i]]))
+   temp <- as.matrix(temp)
+   ##get the increment
+   avo_frequency  <- cbind(avo_frequency ,temp)
+   ##start adding them
+  }
+}
+
+#now add column names
+d_avo <- data.frame(avo_frequency)
+colnames(d_avo) <- colnames(da)
+
+```
+
+- `d_avo_frequency` (see below) contains frequency of pixles whose color changed when `hue` was
+incremented by 1
+
+```{r }
+#convert wide to long extract data attribute 
+#and create new columns
+dff <-(melt(d_avo, id.vars=c("hue_index")))
+dff$block<- substring(dff$variable,0,1)
+dff$treatment <- substring(dff$variable,2,2)
+dff$id <- substring(dff$variable,3,4)
+d_avo_frequency <- dff[,c("block","treatment","id","hue_index","value")]
+```
+
+- `20` HUE indidate percent of avocado whose that became black when hue was changed 
+from 19 to 20. (bad)
+
+- `25` HUE indicate percent of avocado that turn black when hue was increased from
+24 to 25. (still good)
+
+- `30` HUE indicate percent of avocado that turn black when hue changed from 29 to 30.
+
+```{r, message=FALSE, warning=FALSE, fig.cap="Hue frequency"}
+d_avo_frequency %>% ggplot(aes(x = hue_index, y = value, color=treatment)) + 
+  geom_point(aes(color = treatment)) + facet_wrap(~block,ncol = 1) + xlim(20,35) +
+  xlab("Hue") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Create avocado pdf
+
+```{r}
+#now df_avo cotains percent of pixles whose color changed when 
+# head(d_avo)
+
+## empty matrix that will get the frequency data
+avo_pdf <- as.matrix(0:49)
+
+for (i in colnames(d_avo)){
+  if (i == "hue_index"){
+   }
+  else{
+   ##Do something
+   temp <- sum(d_avo[[i]])
+   temp <- d_avo[[i]]/temp
+   ##start adding them
+   avo_pdf   <- cbind(avo_pdf  ,temp)
+  }
+}
+
+#now add column names
+d_avo_pdf <- data.frame(avo_pdf)
+colnames(d_avo_pdf) <- colnames(da)
+# head(d_avo_pdf)
+
+#convert wide to long extract data attribute 
+#and create new columns
+dff <-(melt(d_avo_pdf, id.vars=c("hue_index")))
+dff$block<- substring(dff$variable,0,1)
+dff$treatment <- substring(dff$variable,2,2)
+dff$id <- substring(dff$variable,3,4)
+d_avo_pdf_long <- dff[,c("block","treatment","id","hue_index","value")]
+# head(d_avo_pdf_long)
+```
+
+# Create sample data based on the pdf
+
+```{r, message=FALSE, warning=FALSE, fig.cap="Empirical distribution",}
+BT <- d_avo_pdf_long %>% filter(block=="B" & treatment =="t") %>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+BC <- d_avo_pdf_long %>% filter(block=="B" & treatment =="c")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE))
+
+NT <- d_avo_pdf_long %>% filter(block=="N" & treatment =="t")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+NC <- d_avo_pdf_long %>% filter(block=="N" & treatment =="c")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+JT <- d_avo_pdf_long %>% filter(block=="J" & treatment =="t")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+JC <- d_avo_pdf_long %>% filter(block=="J" & treatment =="c")%>% 
+      group_by(hue_index) %>% dplyr::summarize(Mean = mean(value, na.rm=TRUE)) 
+
+#treatment
+s1 <- get_ind_data(BT)
+t1 <- data.frame(block="B", control = "treatment", value = s1)
+
+s2 <- get_ind_data(JT)
+t2 <- data.frame(block="J", control = "treatment", value = s2)
+
+s3 <- get_ind_data(NT)
+t3 <- data.frame(block="N", control = "treatment", value = s3)
+
+three_treats <- rbind(t1,t2,t3)
+
+#control
+s4 <- get_ind_data(BC)
+t4 <- data.frame(block="B", control = "control", value = s4)
+
+s5 <- get_ind_data(JC)
+t5 <- data.frame(block="J", control = "control", value = s5)
+
+s6 <- get_ind_data(NC)
+t6 <- data.frame(block="N", control = "control", value = s6)
+three_control <- rbind(t4,t5,t6)
+
+data <- rbind(three_treats,three_control)
+
+p1 <- data%>% ggplot(.,aes(x=value)) +
+           geom_density(aes(fill=control),adjust=1.5,alpha=0.3)  +
+           facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("emprical pdf") +
+        xlab("Hue") + ylab("Probability") 
+    
+
+p2 <- data %>% ggplot(.,aes(x=value, colour = control)) + stat_ecdf() +
+  facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("empirical cdf") +
+        xlab("Hue") + ylab("Probability")
+
+p1 | p2 
+```
+
+
+### Test based on the maximum distance between empirical distributions
+
+```{r, message=FALSE, warning=FALSE, out.height="200%", fig.cap="Result of KS permutation test"}
+#control <- getIncre(df1)
+#treatment <- getIncre(df2)
+control <- BT$Mean
+treatment <- BC$Mean
+
+#sharp null distribution
+par(mfrow=c(3,1))
+invisible(capture.output(get_ks_permutation(BT$Mean,BC$Mean,5000)))
+invisible(capture.output(get_ks_permutation(JT$Mean,JC$Mean,5000)))
+invisible(capture.output(get_ks_permutation(NT$Mean,NC$Mean,5000)))
+par(mfrow=c(1,1))
+Z <- c(control,treatment)
+n <- length(control )
+m <- length(treatment)
+N <- length(Z)
+```
+
+> No significant treatment effect was observed
+
+### hue_turn 
+
+```{r}
+#raw data converted to long format
+# head(d_avo_raw) 
+
+#arrange the data by block, treatement, id and hue_index
+d <- as.data.table(d_avo_raw)
+d <- d %>% filter(hue_index > 18 & hue_index < 44)
+db <- d[order(rank(block), treatment,id,hue_index)]
+# head(db)
+# dim(db)/36
+```
+
+> The following shows two samples shown during the presentation. These
+figure sugguest that even hue_turn does not capture the treatment effect of our
+interest.
+
+```{r, message=FALSE, warning=FALSE, paged.print=FALSE,fig.cap="Comparision of good and bad avocado black cdf" }
+d_temp <- as.data.table(d_avo_raw)
+# d_temp
+d <- d_temp %>% filter(hue_index > 18 & hue_index < 44) %>% 
+           filter (block == "B", id == 2 ) 
+db <- d[order(rank(block), treatment,id,hue_index)]
+
+d <- d_temp %>% filter(hue_index > 18 & hue_index < 44) %>% 
+           filter (block == "J", id == 11 ) 
+dj <- d[order(rank(block), treatment,id,hue_index)]
+
+# tail(db)
+# db
+p1 <- db %>% ggplot(.,aes(x=hue_index, y = value, colour = treatment)) + geom_line() +
+  facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("Block B treatment") +
+        xlab("Hue") + ylab("Probability")
+
+p2 <- dj %>% ggplot(.,aes(x=hue_index, y = value, colour = treatment)) + geom_line() +
+  facet_wrap(~block, ncol = 1) +
+           xlim(20, 45) +
+           theme(
+                  legend.position="top",
+                  panel.spacing = unit(0.1, "lines"),
+                  axis.ticks.x=element_blank(),
+                  plot.title = element_text(hjust = 0.5)
+                ) +
+        ggtitle("Block J treatment ") +
+        xlab("Hue") + ylab("Probability")
+
+p1/p2
+```
+
+
+### Code for mannual confirmation
+
+```{r, fig.cap="Example of abrupt change detection" }
+d <- as.data.table(d_avo_raw)
+d <- d %>% filter(hue_index > 18 & hue_index < 44)
+db <- d[order(rank(block), treatment,id,hue_index)]
+i = 23
+id <- i
+start <- id + (id-1)*24
+end <- id*25
+d_temp <- as.data.frame(db[start:end,])
+dg <- d_temp$value
+
+d_temp[1,"block"]
+#abrupt change detection point
+dg.amoc=cpt.mean(dg)
+v = cpts(dg.amoc)
+par(mfrow=c(1,1))
+plot(dg,xaxt='n', ,
+        xlab="Hue",
+        ylab="Black Ratio")
+abline(v=v,col="red")
+```
+
+
+```{r, message=FALSE, warning=FALSE, paged.print=FALSE}
+d <- as.data.table(d_avo_raw)
+d <- d %>% filter(hue_index > 18 & hue_index < 44)
+db <- d[order(rank(block), treatment,id,hue_index)]
+
+b_result <- data.frame(block = numeric(0),avocado_number= numeric(0),
+                       treatment = numeric(0),
+                       hue_turn = numeric(0) )
+
+
+
+#hue index starts from 19
+# par(mfrow=c(3,4))
+i = 1
+for (i in 1:36){
+  start <- i + (i-1)*24
+  end <- i*25
+  d_temp <- as.data.frame(db[start:end,])
+  dg <- d_temp$value
+  block <- d_temp[1,"block"]
+  treatment <- d_temp[1,"treatment"]
+  id <- d_temp[1,"id"]
+  #abrupt change detection point
+  dg.amoc=cpt.mean(dg)
+  v = cpts(dg.amoc)
+  # print(v)
+  abrupt <- v + 19
+  # print(abrupt)
+  b_result[i,] <- c(block,id,treatment,abrupt)
+  # plot(dg)
+  # abline(v=v,col="red")
+}
+```
+
+# Power Calculation
+
+## Hue turn
+
+```{r}
+b_result$hue_turn <- as.numeric(as.character(b_result$hue_turn))
+setDT(b_result)
+```
+
+```{r}
+mean_hue <- b_result[, .(mean_hue_turn = mean(hue_turn)), keyby = .(treatment)]
+mean_hue
+```
+
+```{r}
+sd_hue <- b_result[, .(sd_hue_turn = sd(hue_turn)), keyby = .(treatment)]
+sd_hue
+```
+
+```{r}
+power_test_t <- function(
+  mean_control = 24.22222, 
+  mean_treat = 25.11111, 
+  sd_control = 1.895988, 
+  sd_treat = 2.632129,
+  number_per_condition = 18, 
+  power_loops = 100, 
+  ri_loops = 100, 
+  verbose = TRUE) { 
+
+    p_values <- NA   
+    ri <- NA 
+    d <- data.table()
+  
+    d[ , condition := rep(c('control', 'treatment'), each = number_per_condition)]  
+  
+    for(power_loop in 1:power_loops) { 
+      if(verbose == TRUE) {
+        if(power_loop %% 10 == 0) {
+          cat(sprintf('Loop Number: %.0f\n', power_loop))
+        }
+      } 
+      
+      # d[condition == 'control',   Y := rnorm(.N, mean = mean_control, sd = sd_control)]
+      # d[condition == 'treatment', Y := rnorm(.N, mean = mean_treat, sd = sd_treat)]
+      # 
+      # ate <- d[ , mean(Y), keyby = condition][ , diff(V1)]
+      # 
+      # for(ri_loop in 1:ri_loops) { 
+      #   ri[ri_loop] <- d[ , mean(Y), keyby = sample(condition)][ , diff(V1)]
+      #   }
+      # 
+      # p_values[power_loop] <- mean(abs(ri) > abs(ate))
+      
+      p_values[power_loop] <- t.test(
+        x = rnorm(number_per_condition, mean = mean_control, sd = sd_control), 
+        y = rnorm(number_per_condition, mean = mean_treat, sd = sd_treat)
+      )$p.value
+    }
+      
+    return(list(
+      'p_values' = p_values, 
+      'power' = mean(p_values < 0.05)
+      ))
+}
+```
+
+
+```{r}
+power_test_t()$power
+```
+
+### Analysis
+
+> For hue_turn, the statistical power is 0.23, which is small because the mean of hue_turn in each group is close to each other.
+
+
+## Weight
+
+### read a csv file
+
+```{r}
+d_weight <- fread('./data/avo_agg.csv')
+d_weight
+```
+
+
+### calculate the difference between before and after 
+```{r}
+d_weight[, tau := Pre_weight - After]
+d_weight
+```
+
+```{r}
+d_weight_mean <- d_weight[, .(mean_weight = mean(tau)), keyby = .(treatment)]
+d_weight_mean
+```
+
+```{r}
+d_weight_sd <- d_weight[, .(sd_weight = sd(tau)), keyby = .(treatment)]
+d_weight_sd
+```
+
+```{r}
+power_test_t <- function(
+  mean_control = 17.94444, 
+  mean_treat = 7.00000, 
+  sd_control = 3.857342, 
+  sd_treat = 8.022028,
+  number_per_condition = 18, 
+  power_loops = 100, 
+  ri_loops = 100, 
+  verbose = TRUE) { 
+
+    p_values <- NA   
+    ri <- NA 
+    d <- data.table()
+  
+    d[ , condition := rep(c('control', 'treatment'), each = number_per_condition)]  
+  
+    for(power_loop in 1:power_loops) { 
+      if(verbose == TRUE) {
+        if(power_loop %% 10 == 0) {
+          cat(sprintf('Loop Number: %.0f\n', power_loop))
+        }
+      } 
+      
+      # d[condition == 'control',   Y := rnorm(.N, mean = mean_control, sd = sd_control)]
+      # d[condition == 'treatment', Y := rnorm(.N, mean = mean_treat, sd = sd_treat)]
+      # 
+      # ate <- d[ , mean(Y), keyby = condition][ , diff(V1)]
+      # 
+      # for(ri_loop in 1:ri_loops) { 
+      #   ri[ri_loop] <- d[ , mean(Y), keyby = sample(condition)][ , diff(V1)]
+      #   }
+      # 
+      # p_values[power_loop] <- mean(abs(ri) > abs(ate))
+      
+      p_values[power_loop] <- t.test(
+        x = rnorm(number_per_condition, mean = mean_control, sd = sd_control), 
+        y = rnorm(number_per_condition, mean = mean_treat, sd = sd_treat)
+      )$p.value
+    }
+      
+    return(list(
+      'p_values' = p_values, 
+      'power' = mean(p_values < 0.05)
+      ))
+}
+```
+
+
+```{r}
+power_test_t()$power
+```
+
+### Analysis
+
+> For weight, the statistical power is 1, which is very high because difference in mean and standard deviation between the control group and the treatment group is very large.
+
+

@@ -469,7 +469,7 @@ power_test_t()$power
 
 **result**
 
-Statistical power for weight is 0.51, which is not small although our sample size is small.
+Statistical power for black_ratio is 0.51, which is not small although our sample size is small.
 
 
 
