@@ -91,11 +91,9 @@ We found no indicators that would lead us to believe randomization was faulty. F
 ## Links and References
 <a name='links_and_references' />
 
-<a name='ref1' />
-1. [THE 17 GOALS | Sustainable Development](https://sdgs.un.org/goals)
 
-<a name='ref2' />
-2. [Goal 12 | Department of Economic and Social Affairs](https://sdgs.un.org/goals/goal12)
+1. [THE 17 GOALS | Sustainable Development](https://sdgs.un.org/goals) <a name='ref1' />
+2. [Goal 12 | Department of Economic and Social Affairs](https://sdgs.un.org/goals/goal12) <a name='ref2' />
 
 <a name='ref3' />    
 3. [Strella Biotechnology – Fighting Food Waste](https://www.strellabiotech.com/)
