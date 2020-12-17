@@ -50,16 +50,17 @@ We found no indicators that would lead us to believe randomization was faulty. F
 
 Experiment power calculations are performed in the (power_avocado.Rmd)[src/R/power_avocado.Rmd] and (power_banana.Rmd)[src/R/power_banana.Rmd] files.
 
-## Analysis
-<a name='analysis' />
+## Analysis <a name='analysis' />
+
 For each experiment, we did analysis in two parts. The first part involved converting images into Hue/Value/Saturation format, and varying the hue while other values stayed fixed. This allowed us to separate out light and dark parts of the fruits. We evaluated this separation in two ways. For bananas, we watched how the area of darkness changed over time. We called the day that it turned more dark the measure d_turn. For avocados, since we only took one image, we called the hue at which the percentage of black in the image abruptly increased the hue turn. We used change detection algorithms (CUMSUM and BCP) to identify these points.
 
 Our results did reveal some significance in different avocado blocks between treatment and control. However, we observed that in treatment, the block using plastic bags were still inedible inspite of insignificant darkening. They had become mushy and grown mold on the outside.
 
-Please see the (banana)[Data_cleaning_banana.pdf] and (avocado)[Data_cleaning_avocado.pdf] documents for a walkthrough of the analysis and detailed results.
+Please see the [banana](Data_cleaning_banana.pdf) and [avocado](Data_cleaning_avocado.pdf) documents for a walkthrough of the analysis and detailed results.
 
-## Conclusions
-<a name='conclusions' />
+## Conclusions <a name='conclusions' />
+
+For charts of our analyzed data, please see our [final presentation](media/final_presentation/Presentation.pdf).
 
 * A single value response may not be able to capture the treatment effect that you wish to capture.
 * Rather than using a scalar value, using a vector or hyperplane can a solution.
