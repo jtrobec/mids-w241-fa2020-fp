@@ -59,7 +59,7 @@ Please see the [banana](Data_cleaning_Banana.pdf) and [avocado](Data_cleaning_Av
 
 ## Conclusions <a name='conclusions' />
 
-For charts of our analyzed data, please see our [final presentation](media/final_presentation/Presentation.pdf).
+For charts of our analyzed data and accompanying images, please see our [final presentation](media/final_presentation/Final Presentation.pdf).
 
 * A single value response may not be able to capture the treatment effect that you wish to capture.
 * Rather than using a scalar value, using a vector or hyperplane can a solution.
