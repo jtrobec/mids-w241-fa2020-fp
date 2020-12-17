@@ -3,7 +3,7 @@ Quantifying the treatment effects on prolonging the freshness of apples, bananas
 #### MIDS W241 Fa2020
 #### Bill Chung, Justin Trobec, Nobu Yamaguchi
 
-This file is a summary of our final project for MIDS W241 in Fall 2020. Please also see our [final presentation](media/final_presentation/Final Presentation.pdf) for additional details, charts, and images explaining our work.
+This file is a summary of our final project for MIDS W241 in Fall 2020. Please also see our [final presentation](media/final_presentation/FinalPresentation.pdf) for additional details, charts, and images explaining our work.
 
 ### Table of Contents
 
@@ -61,7 +61,7 @@ Please see the [banana](Data_cleaning_Banana.pdf) and [avocado](Data_cleaning_Av
 
 ## Conclusions <a name='conclusions' />
 
-For charts of our analyzed data and accompanying images, please see our [final presentation](media/final_presentation/Final Presentation.pdf).
+For charts of our analyzed data and accompanying images, please see our [final presentation](media/final_presentation/FinalPresentation.pdf).
 
 * A single value response may not be able to capture the treatment effect that you wish to capture.
 * Rather than using a scalar value, using a vector or hyperplane can a solution.
